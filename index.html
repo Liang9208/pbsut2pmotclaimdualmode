@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBSU T2 OT Claim</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#f5f4f0;--surface:#fff;--border:#e2dfd8;--bmed:#c5c0b8;
+--text:#1a1a18;--muted:#6b6860;--faint:#aaa8a2;
+--green:#1a7a4a;--gbg:#eaf5ef;--gbd:#b6dfc7;
+--amber:#8a5a00;--abg:#fef8e7;--abd:#f0d080;
+--red:#a02020;--rbg:#fdf0f0;--rbd:#f0c0c0;
+--blue:#1a4a8a;--bbg:#eef4fd;--bbd:#b8d0f5;
+--r:10px;--rs:6px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+.app{max-width:1600px;margin:0 auto;padding:24px 16px 60px;display:flex;gap:0;align-items:flex-start}
+.main-left{width:60%;min-width:360px;padding-right:8px}
+.sharepoint-right{width:40%;min-width:360px;position:sticky;top:16px;align-self:flex-start;padding-left:8px}
+.splitter{width:12px;align-self:stretch;min-height:calc(100vh - 48px);cursor:col-resize;position:relative;flex:0 0 12px}
+.splitter::before{content:'';position:sticky;top:16px;display:block;width:4px;height:calc(100vh - 96px);min-height:520px;margin:0 auto;border-radius:999px;background:var(--border);transition:background .15s}
+.splitter:hover::before,.splitter.dragging::before{background:var(--blue)}
+.splitter::after{content:'⋮';position:sticky;top:45vh;display:flex;align-items:center;justify-content:center;width:18px;height:42px;margin-left:-3px;margin-top:-42px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--muted);font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+body.resizing{cursor:col-resize;user-select:none}
+body.resizing .sharepoint-frame{pointer-events:none}
+.sharepoint-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px}
+.sharepoint-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.sharepoint-title{font-size:14px;font-weight:700;flex:0 0 auto}
+.sharepoint-actions{display:flex;align-items:center;justify-content:space-between;gap:6px;flex:1 1 auto;min-width:220px}
+.sharepoint-link,.sharepoint-toggle{font-size:12px;color:var(--blue);text-decoration:none;border:1px solid var(--bbd);background:var(--bbg);padding:4px 8px;border-radius:var(--rs);white-space:nowrap;font-family:inherit;cursor:pointer}
+.sharepoint-toggle:hover,.sharepoint-link:hover{opacity:.85}
+.sharepoint-frame{width:100%;height:calc(100vh - 96px);min-height:720px;border:1px solid var(--border);border-radius:var(--rs);background:#fff}
+.app.sp-collapsed .main-left{width:calc(100% - 250px)!important;max-width:none}
+.app.sp-collapsed .splitter{display:none}
+.app.sp-collapsed .sharepoint-right{width:250px!important;min-width:250px;padding-left:8px;position:sticky;top:16px}
+.app.sp-collapsed .sharepoint-card{padding:10px 12px;position:sticky;top:16px;overflow:visible;cursor:pointer}
+.app.sp-collapsed .sharepoint-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0;flex-wrap:nowrap}
+.app.sp-collapsed .sharepoint-title{writing-mode:horizontal-tb!important;transform:none!important;margin:0;font-size:12px;white-space:nowrap;line-height:1.2;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis}
+.app.sp-collapsed .sharepoint-actions{display:flex;align-items:center;justify-content:flex-end;width:auto;gap:0;flex:0 0 auto;min-width:auto;flex-wrap:nowrap}
+.app.sp-collapsed .sharepoint-link,.app.sp-collapsed .sharepoint-frame,.app.sp-collapsed .apihint{display:none!important}
+.app.sp-collapsed .sharepoint-toggle{display:inline-flex!important;align-items:center;justify-content:center;padding:4px 10px;width:auto;min-width:64px;max-width:none;font-size:12px;position:relative;z-index:5}
+@media(max-width:900px){.app{display:block}.main-left,.sharepoint-right{width:100%!important;min-width:0;padding:0}.splitter{display:none}.sharepoint-right{position:static;margin-top:16px}.sharepoint-frame{height:650px;min-height:650px}.app.sp-collapsed .sharepoint-right{width:100%!important}.app.sp-collapsed .sharepoint-card{padding:12px}.app.sp-collapsed .sharepoint-head{display:flex;text-align:left}.app.sp-collapsed .sharepoint-title{writing-mode:initial;transform:none;margin:0;font-size:14px}.app.sp-collapsed .sharepoint-link,.app.sp-collapsed .sharepoint-frame,.app.sp-collapsed .apihint{display:none}.app.sp-collapsed .sharepoint-toggle{width:auto}}
+h1{font-size:20px;font-weight:700;letter-spacing:-.3px;margin-bottom:3px}
+.sub{font-size:13px;color:var(--muted);margin-bottom:18px}
+.steps{display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--faint);padding:2px 6px 2px 0}
+.step.active{color:var(--text);font-weight:700}
+.step.done{color:var(--green)}
+.snum{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--bmed);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.step.active .snum{background:var(--text);color:#fff;border-color:var(--text)}
+.step.done .snum{background:var(--gbg);color:var(--green);border-color:var(--gbd)}
+.sarr{color:var(--bmed);font-size:13px;margin:0 1px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px}
+.ctitle{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.ctag{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--bg);border:1px solid var(--border);color:var(--muted)}
+.ugrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.uz{display:block;border:1.5px dashed var(--bmed);border-radius:var(--rs);padding:16px 10px;text-align:center;cursor:pointer;transition:all .15s;user-select:none}
+.uz:hover{border-color:var(--text);background:var(--bg)}
+.uz.done{border-style:solid;border-color:var(--gbd);background:var(--gbg)}
+.uz input[type="file"]{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+.uzi{font-size:22px;margin-bottom:4px}
+.uzl{font-size:13px;font-weight:600}
+.uzs{font-size:11px;color:var(--muted);margin-top:2px}
+.uzf{font-size:11px;color:var(--green);margin-top:4px;font-weight:600;word-break:break-all;line-height:1.3}
+.uzth{max-width:100%;max-height:70px;border-radius:4px;margin-top:5px;object-fit:cover}
+.apibox{background:var(--abg);border:1px solid var(--abd);border-radius:var(--rs);padding:11px 13px;margin-bottom:12px}
+.apibox label{display:block;font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.apibox input,.apibox select{width:100%;font-size:13px;padding:6px 9px;border-radius:var(--rs);border:1px solid var(--abd);background:#fff;color:var(--text);font-family:monospace}
+.apigrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+@media(max-width:640px){.apigrid{grid-template-columns:1fr}}
+.apihint{font-size:11px;color:var(--amber);margin-top:4px;line-height:1.5}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--rs);border:1px solid var(--bmed);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;cursor:pointer;transition:all .15s;font-weight:500;white-space:nowrap}
+.btn:hover{background:var(--bg)}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--text);color:#fff;border-color:var(--text)}
+.btn.primary:hover{opacity:.85}
+.btn.preview{background:var(--bbg);color:var(--blue);border-color:var(--bbd);font-weight:700}
+.btn.preview:hover{background:#dfeafb;border-color:#8fb2e8}
+.btn.preview:disabled{background:var(--bbg);color:var(--blue);border-color:var(--bbd)}
+.btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+.bgrp{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.alert{font-size:12px;padding:8px 11px;border-radius:var(--rs);margin:7px 0;line-height:1.5}
+.alert.err{background:var(--rbg);color:var(--red);border:1px solid var(--rbd)}
+.alert.ok{background:var(--gbg);color:var(--green);border:1px solid var(--gbd)}
+.alert.warn{background:var(--abg);color:var(--amber);border:1px solid var(--abd)}
+.sbox{position:relative;margin-bottom:8px}
+.sbox input{width:100%;font-size:13px;padding:7px 11px 7px 30px;border-radius:var(--rs);border:1px solid var(--bmed);background:var(--surface);color:var(--text);font-family:inherit}
+.sbox input:focus{outline:none;border-color:var(--text)}
+.sbox::before{content:'\2315';position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:15px;pointer-events:none}
+.holdbox{background:#f0f4ff;border:1px solid var(--bbd);border-radius:var(--rs);padding:12px;margin-bottom:12px}
+.holdbox label{display:block;font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.holdbox textarea{width:100%;font-size:12px;padding:7px 9px;border-radius:var(--rs);border:1px solid var(--bbd);background:#fff;color:var(--text);font-family:inherit;resize:vertical;outline:none}
+.holdbox textarea:focus{border-color:var(--blue)}
+.holdbox .hint{font-size:11px;color:var(--blue);margin-top:5px;opacity:.8}
+.ftbl{width:100%;border-collapse:collapse;font-size:12px}
+.ftbl th{padding:6px 9px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);background:var(--bg);white-space:nowrap}
+.ftbl td{padding:6px 9px;border-bottom:1px solid var(--border);vertical-align:top}
+.ftbl tbody tr:last-child td{border-bottom:none}
+.ftbl tbody tr:hover{background:#fafaf8}
+.cstags{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+.cstag{display:inline-flex;align-items:center;gap:2px;font-size:11px;padding:2px 6px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:default}
+.cstag.pb{border-color:#c0d8f0;background:#eef4fd;color:#1a4a8a}
+.cstag.gs{border-color:#c8e8c8;background:#eaf5ea;color:#1a6a2a}
+.cstag.rs{border-color:var(--abd);background:var(--abg);color:var(--amber)}
+.cstag .rm{background:none;border:none;cursor:pointer;color:inherit;opacity:.5;font-size:11px;line-height:1;padding:0 0 0 2px;font-family:inherit}
+.cstag .rm:hover{opacity:1}
+.addcs{font-size:11px;padding:2px 6px;border-radius:7px;border:1px dashed var(--bmed);background:none;color:var(--muted);cursor:pointer;font-family:inherit}
+.addcs:hover{border-color:var(--text);color:var(--text)}
+.delrow{background:none;border:none;cursor:pointer;color:var(--faint);font-size:14px;padding:2px;border-radius:4px}
+.delrow:hover{background:var(--rbg);color:var(--red)}
+input.inl{font-size:12px;padding:3px 6px;border:1px solid var(--bmed);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit}
+input.inl:focus{outline:none;border-color:var(--text)}
+input.csedit{font-size:11px;padding:3px 6px;border:1px solid var(--bbd);border-radius:5px;background:var(--bbg);color:#1a4a8a;font-family:inherit;min-width:110px}
+input.csedit:focus{outline:none}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:10px;text-align:center}
+.statn{font-size:24px;font-weight:700}
+.statl{font-size:11px;color:var(--muted);margin-top:1px}
+.twrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--rs)}
+table.ot{width:100%;border-collapse:collapse;font-size:12px;min-width:800px}
+table.ot thead{background:var(--bg)}
+table.ot th{padding:7px 9px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);white-space:nowrap}
+table.ot td{padding:6px 9px;border-bottom:1px solid var(--border);vertical-align:middle}
+table.ot tbody tr:last-child td{border-bottom:none}
+table.ot tbody tr:hover{background:#fafaf8}
+table.ot tbody tr.skiprow{opacity:.45}
+.tag{display:inline-flex;align-items:center;font-size:11px;padding:2px 7px;border-radius:9px;font-weight:700;white-space:nowrap}
+.tag.ot{background:var(--gbg);color:var(--green);border:1px solid var(--gbd)}
+.tag.skip{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.tag.nf{background:var(--abg);color:var(--amber);border:1px solid var(--abd)}
+.tag.nhb{background:#fffde7;color:#7a6000;border:1px solid #f0d840}
+.tag.crf{background:var(--bbg);color:var(--blue);border:1px solid var(--bbd)}
+.noteinp{width:100%;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:inherit}
+.noteinp:focus{outline:none;border-color:var(--text)}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#overlay{display:none;position:fixed;inset:0;background:rgba(245,244,240,.9);z-index:200;align-items:center;justify-content:center}
+#overlay.show{display:flex}
+.lb{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px 40px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.bspin{width:36px;height:36px;border:3px solid var(--bmed);border-top-color:var(--text);border-radius:50%;animation:spin .65s linear infinite;margin:0 auto 11px}
+.lb p{font-size:14px;font-weight:600}
+.lb .lsub{font-size:12px;color:var(--muted);margin-top:3px}
+@media(max-width:640px){.ugrid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
+
+.modebar{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap}
+.modebtn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--rs);border:1px solid var(--bmed);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;cursor:pointer;font-weight:600}
+.modebtn.active{background:var(--text);color:#fff;border-color:var(--text)}
+#ppMode,#coMode{display:none}
+.excel-preview{border:1px solid #b7b7b7;border-radius:var(--rs);overflow:auto;background:#fff;margin-bottom:12px}
+.excel-preview table{border-collapse:collapse;font-size:12px;min-width:520px;background:#fff}
+.excel-preview th,.excel-preview td{border:1px solid #d9d9d9;padding:5px 8px;height:24px;vertical-align:middle;color:#1a1a18;background:#fff;font-weight:400;text-align:left}
+.excel-preview thead th{background:#f2f2f2;font-weight:700}
+.excel-preview .xl-colhdr{background:#f3f3f3;color:#444;text-align:center;font-weight:600;padding:3px 8px;height:22px}
+.excel-preview .xl-rowhdr{background:#f3f3f3;color:#444;text-align:center;width:42px;font-weight:600;padding:3px 6px}
+.excel-preview .xl-id{width:14ch}
+.excel-preview .xl-name{width:34ch}
+.excel-preview .xl-team{width:14ch}
+
+</style>
+</head>
+<body>
+<div id="overlay">
+  <div class="lb">
+    <div class="bspin"></div>
+    <p id="loadtxt">Analysing photo with AI...</p>
+    <div class="lsub">This may take 15-30 seconds</div>
+  </div>
+</div>
+<div class="app">
+  <div class="main-left">
+  <h1>PBSU T2 OT Claim</h1>
+  <p class="sub">Upload master excel &amp; flight photo. Dual-API failover enabled (Gemini + OpenRouter).</p>
+  <div class="modebar">
+    <button type="button" class="modebtn active" id="modeOTBtn" onclick="switchTool('ot')">Holdback OT</button>
+    <button type="button" class="modebtn" id="modeCOBtn" onclick="switchTool('co')">Confirm Off OT</button>
+    <button type="button" class="modebtn" id="modePPBtn" onclick="switchTool('pp')">PrePlanned OT</button>
+  </div>
+  <div id="otMode">
+  <div class="steps">
+    <div class="step active" id="s1"><div class="snum">1</div>Upload &amp; API</div>
+    <span class="sarr">&#x203A;</span>
+    <div class="step" id="s2"><div class="snum">2</div>AI reads photo</div>
+    <span class="sarr">&#x203A;</span>
+    <div class="step" id="s3"><div class="snum">3</div>Review flights</div>
+    <span class="sarr">&#x203A;</span>
+    <div class="step" id="s4"><div class="snum">4</div>Copy Data</div>
+  </div>
+
+  <div id="panel1">
+    <div class="card">
+      <div class="ctitle">Step 1 - Upload files &amp; Setup</div>
+      <div class="apibox">
+        <label>Dual-API Failover Settings</label>
+        <div class="apigrid">
+          <input type="password" id="apiKey" placeholder="Gemini Key 1 (AIzaSy...)" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" oninput="chkReady()">
+          <input type="password" id="apiKey2" placeholder="OpenRouter Key 2 (sk-or-v1...)" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" oninput="chkReady()">
+          <select id="modelPrimary" onchange="chkReady()">
+            <option value="gemini-2.5-flash" selected>Primary: Gemini 2.5 Flash</option>
+            <option value="gemini-2.0-flash">Primary: Gemini 2.0 Flash</option>
+            <option value="gemini-1.5-pro-latest">Primary: Gemini 1.5 Pro</option>
+          </select>
+          <select id="modelFallback" onchange="chkReady()">
+            <option value="meta-llama/llama-3.2-11b-vision-instruct:free" selected>Fallback: Llama 3.2 Vision (Free)</option>
+            <option value="qwen/qwen-2-vl-72b-instruct">Fallback: Qwen 2 VL 72B</option>
+            <option value="google/gemini-2.0-flash-exp:free">Fallback: Gemini 2.0 (OpenRouter Free)</option>
+          </select>
+        </div>
+        <div class="apihint">Provide both keys for automatic failover. If Gemini fails or gets congested, OpenRouter takes over seamlessly.</div>
+      </div>
+      <div class="ugrid">
+        
+        <div class="uz" id="mz" style="cursor:default; text-align:left;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div class="uzl" style="font-size:13px; font-weight:600;">&#x1F4C1; Master Data</div>
+            <select id="masterSourceType" class="noteinp" style="width:auto; padding:2px 4px; font-size:11px;" onchange="toggleMasterSource()">
+              <option value="sheet" selected>Google Sheet</option>
+              <option value="file">Excel File</option>
+            </select>
+          </div>
+          
+          <div id="masterSheetInput">
+            <input type="text" id="mSheetLink" class="noteinp" placeholder="Paste Google Sheet Link here..." style="margin-bottom:6px;">
+            <button type="button" class="btn preview" style="width:100%; justify-content:center; padding:4px;" onclick="loadFromSheet()">Fetch Data</button>
+          </div>
+          
+          <div id="masterFileInput" style="display:none; text-align:center; padding-top:8px;">
+            <label style="cursor:pointer; display:block;">
+              <input type="file" id="mFile" accept=".xlsx,.xls" onchange="loadMaster(this)" style="display:none;">
+              <div class="uzs" style="text-decoration:underline; color:var(--blue);">Click to browse .xlsx</div>
+            </label>
+          </div>
+          <div class="uzf" id="mName" style="text-align:center;"></div>
+        </div>
+        <label class="uz" id="pz">
+          <input type="file" id="pFile" accept="image/*" onchange="loadPhoto(this)">
+          <div class="uzi">&#x1F4F8;</div><div class="uzl">Flight screenshot</div>
+          <div class="uzs">Deployment board photo</div>
+          <div class="uzf" id="pName"></div>
+          <img id="thumb" class="uzth" style="display:none">
+        </label>
+      </div>
+      <div class="holdbox">
+        <label>Paste holdback / CRF / RS&amp;ODA flights here</label>
+        <textarea id="manualText" rows="4" placeholder="Paste your supervisor message here, e.g.:&#10;1. Sathya - SQ164 F35 0825hrs&#10;Shaila/Liang/Devendran - E28 SQ956 0905hrs"></textarea>
+        <div class="hint">The system splits names by slashes (/) or commas and matches them automatically in Step 3.</div>
+      </div>
+      <div id="p1msg"></div>
+      <div class="bgrp">
+        <button class="btn primary" id="analyseBtn" onclick="runAnalysis()" disabled>
+          <span class="spin" id="aSpin" style="display:none"></span>Analyse photo with AI
+        </button>
+        <span style="font-size:12px;color:var(--muted)">Both files + at least 1 API key required</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel2" style="display:none">
+    <div class="card">
+      <div class="ctitle">Step 2 - Review extracted flights <span class="ctag" id="flightCount">0</span></div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.6">
+        One row per flight. <span class="cstag pb" style="cursor:default">Blue = preboarding officer</span> &nbsp;
+        <span class="cstag gs" style="cursor:default">Green = GS/CC</span> &nbsp;
+        <span class="cstag rs" style="cursor:default">Amber = RS/team code</span>.
+        Click <strong>x</strong> to remove a tag. Click <strong>+ add</strong> to add one. Only blue tags match to officers.
+      </p>
+      <div class="sbox"><input type="text" id="flightSearch" placeholder="Search flight, gate or call sign..." oninput="filterFlights(this.value)"></div>
+      <div style="overflow-x:auto;border:1px solid var(--border);border-radius:var(--rs)">
+        <table class="ftbl">
+          <thead><tr>
+            <th style="width:55px">ETD</th><th style="width:72px">Flight</th>
+            <th style="width:50px">Gate</th><th>Call signs</th><th style="width:26px"></th>
+          </tr></thead>
+          <tbody id="flightBody"></tbody>
+        </table>
+      </div>
+      <div class="bgrp">
+        <button class="btn" onclick="addFlightRow()">+ Add flight</button>
+        <button class="btn" onclick="goPanel(1)">&#x2039; Back</button>
+        <button class="btn primary" onclick="buildOT()">Build OT list &#x203A;</button>
+      </div>
+      <div id="p2msg"></div>
+    </div>
+  </div>
+
+  <div id="panel3" style="display:none">
+    <div class="card">
+      <div class="ctitle">Step 3 - Review and prepare OT data</div>
+      <div class="stats">
+        <div class="stat"><div class="statn" id="stTotal">0</div><div class="statl">Officers</div></div>
+        <div class="stat"><div class="statn" id="stOT" style="color:var(--green)">0</div><div class="statl">Claiming OT</div></div>
+        <div class="stat"><div class="statn" id="stSkip" style="color:var(--muted)">0</div><div class="statl">Skipped</div></div>
+        <div class="stat"><div class="statn" id="stWarn" style="color:var(--amber)">0</div><div class="statl">No flight</div></div>
+      </div>
+      <div id="p3msg"></div>
+      <div class="sbox"><input type="text" id="otSearch" placeholder="Search officer name or Service ID..." oninput="filterOT(this.value)"></div>
+      <div class="twrap">
+        <table class="ot">
+          <thead><tr>
+            <th style="width:75px">Service ID</th>
+            <th style="width:185px">Name</th>
+            <th style="width:65px">Status</th>
+            <th style="width:60px">Team</th>
+            <th style="width:72px">Flight</th>
+            <th style="width:50px">Gate</th>
+            <th style="width:50px">ETD</th>
+            <th>OT reason (editable)</th>
+          </tr></thead>
+          <tbody id="otBody"></tbody>
+        </table>
+      </div>
+      <div class="bgrp" style="margin-top:12px">
+        <button class="btn preview" onclick="previewHoldbackXLSX()">&#x1F441;&#xFE0F; Preview Excel table at bottom</button>
+        <button class="btn" id="copyPreviewBtn" onclick="copyHoldbackPreview()" disabled style="background:var(--gbg); color:var(--green); border-color:var(--gbd); font-weight:700;">📋 Copy Preview Data</button>
+        <button class="btn" id="togSkipBtn" onclick="togSkipped()">Show skipped</button>
+        <button class="btn" onclick="goPanel(2)">&#x2039; Back to flights</button>
+      </div>
+      <div id="otExcelPreview" style="display:none;margin-top:12px"></div>
+    </div>
+  </div>
+</div>
+  <div id="coMode">
+    <div class="card">
+      <div class="ctitle">Confirm Off OT</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Analyse rostered <b>2</b> in blue and <b>OT2</b> in green. Default source is <b>Roster</b> tab, column <b>E</b>. You can switch to <b>Confirm Off OT</b> tab if needed.</p>
+      <div class="apigrid" style="margin-bottom:12px">
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Data source</label>
+          <select id="coSource" class="noteinp">
+            <option value="Roster" selected>Roster tab - Column E</option>
+            <option value="Confirm Off OT">Confirm Off OT tab</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Excel file</label>
+          <input type="file" id="coFile" accept=".xlsx,.xls" class="noteinp">
+        </div>
+      </div>
+      <div class="alert warn">Priority set to <b>Roster</b>. For Roster source, Confirm Off OT checks <b>column E only</b>. For Confirm Off OT source, it checks all roster/date columns after ID, Name and Team.</div>
+      <div class="bgrp">
+        <button class="btn primary" onclick="runRosterModeAnalysis('co')">Analyse Confirm Off OT</button>
+        <button class="btn preview" id="coPreviewBtn" onclick="previewRosterModeXlsx('co')" disabled>&#x1F441;&#xFE0F; Preview Excel table at bottom</button>
+        <button class="btn" id="coCopyBtn" onclick="copyRosterModePreview('co')" disabled style="background:var(--gbg); color:var(--green); border-color:var(--gbd); font-weight:700;">📋 Copy Preview Data</button>
+      </div>
+      <div id="coMsg"></div>
+      <div id="coReview" style="display:none;margin-top:12px"></div>
+      <div id="coExcelPreview" style="display:none;margin-top:12px"></div>
+    </div>
+  </div>
+  <div id="ppMode">
+    <div class="card">
+      <div class="ctitle">PrePlanned OT</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Analyse rostered <b>2</b> in blue and <b>OT2</b> in green. Default source is <b>Roster</b> tab, column <b>F</b>. You can switch to <b>PrePlanned OT</b> tab if needed.</p>
+      <div class="apigrid" style="margin-bottom:12px">
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Data source</label>
+          <select id="ppSource" class="noteinp">
+            <option value="Roster" selected>Roster tab - Column F</option>
+            <option value="PrePlanned OT">PrePlanned OT tab</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Excel file</label>
+          <input type="file" id="ppFile" accept=".xlsx,.xls" class="noteinp">
+        </div>
+      </div>
+      <div class="alert warn">Priority set to <b>Roster</b>. For Roster source, PrePlanned OT checks <b>column F only</b>. For PrePlanned OT source, it checks all roster/date columns after ID, Name and Team.</div>
+      <div class="bgrp">
+        <button class="btn primary" onclick="runRosterModeAnalysis('pp')">Analyse PrePlanned OT</button>
+        <button class="btn preview" id="ppPreviewBtn" onclick="previewRosterModeXlsx('pp')" disabled>&#x1F441;&#xFE0F; Preview Excel table at bottom</button>
+        <button class="btn" id="ppCopyBtn" onclick="copyRosterModePreview('pp')" disabled style="background:var(--gbg); color:var(--green); border-color:var(--gbd); font-weight:700;">📋 Copy Preview Data</button>
+      </div>
+      <div id="ppMsg"></div>
+      <div id="ppReview" style="display:none;margin-top:12px"></div>
+      <div id="ppExcelPreview" style="display:none;margin-top:12px"></div>
+    </div>
+  </div>
+
+  </div>
+
+  <div class="splitter" id="splitter" title="Drag to resize"></div>
+
+  <aside class="sharepoint-right" id="sharepointRight">
+    <div class="sharepoint-card" id="sharepointCard">
+      <div class="sharepoint-head">
+        <div class="sharepoint-title">SharePoint Roster</div>
+        <div class="sharepoint-actions">
+          <a class="sharepoint-link" href="https://certiscisco.sharepoint.com/sites/CASCSSU/_layouts/15/Doc.aspx?sourcedoc={c52400bc-052c-47fd-94bb-69f9044c4d09}&action=embedview&wdInConfigurator=True&wdInConfigurator=True&edaebf=rslc0" target="_blank" rel="noopener">Open in new tab</a>
+          <button type="button" class="sharepoint-toggle" id="sharepointToggle" onclick="event.stopPropagation();toggleSharePoint()">Collapse</button>
+        </div>
+      </div>
+      <iframe
+        class="sharepoint-frame"
+        frameborder="0"
+        scrolling="no"
+        src="https://certiscisco.sharepoint.com/sites/CASCSSU/_layouts/15/Doc.aspx?sourcedoc={c52400bc-052c-47fd-94bb-69f9044c4d09}&action=embedview&wdInConfigurator=True&wdInConfigurator=True&edaebf=rslc0">
+      </iframe>
+      <div class="apihint" style="margin-top:8px">If SharePoint shows refused to connect, use Open in new tab. That is controlled by company SharePoint/IT policy.</div>
+    </div>
+  </aside>
+</div>
+
+
+<script>
+// --- NEW GOOGLE APPS SCRIPT INTEGRATION ---
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyh6yXjZ_lH4dgCEtIwPByDQ0xnRBI3MGGJ2ES9oGVOoGXMzvX-0p_xF1YHTr_IRzYq/exec";
+
+function toggleMasterSource() {
+  var type = document.getElementById('masterSourceType').value;
+  document.getElementById('masterSheetInput').style.display = (type === 'sheet') ? 'block' : 'none';
+  document.getElementById('masterFileInput').style.display = (type === 'file') ? 'block' : 'none';
+}
+
+async function loadFromSheet() {
+  var urlInput = document.getElementById('mSheetLink').value.trim();
+  if (!urlInput) { showMsg('p1msg', 'Please paste a Google Sheet link.', 'err'); return; }
+  
+  var idMatch = urlInput.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (!idMatch || !idMatch[1]) { showMsg('p1msg', 'Invalid Google Sheet link. Ensure it contains /d/ID', 'err'); return; }
+  var sheetId = idMatch[1];
+  
+  setLoading(true, 'Fetching data from Google Sheets...');
+  try {
+    var response = await fetch(GAS_WEB_APP_URL + '?id=' + sheetId);
+    var data = await response.json();
+    
+    if (data.error) throw new Error(data.error);
+    if (!data.grouping) throw new Error("Missing 'Grouping' tab in sheet.");
+    if (!data.roster || !data.roster.values) throw new Error("Missing 'Roster' tab in sheet.");
+    
+    document.getElementById('mName').textContent = "Loaded from Google Sheets";
+    
+    masterData.grouping = parseGrouping(data.grouping);
+    masterData.roster = parseRoster(data.roster, true);
+    masterData.kah = data.kah ? parseKAH(data.kah) : {};
+    
+    document.getElementById('mz').classList.add('done');
+    showMsg('p1msg', 'Google Sheet parsed successfully!', 'ok');
+    chkReady();
+  } catch (ex) {
+    showMsg('p1msg', 'Error fetching sheet: ' + ex.message, 'err');
+  } finally {
+    setLoading(false);
+  }
+}
+// ------------------------------------------
+
+function initResizableSplit(){
+  var app=document.querySelector('.app');
+  var left=document.querySelector('.main-left');
+  var right=document.getElementById('sharepointRight');
+  var splitter=document.getElementById('splitter');
+  if(!app||!left||!right||!splitter)return;
+
+  var saved=localStorage.getItem('pbsuSplitLeftPct');
+  if(saved){
+    var pct=Math.max(28,Math.min(72,parseFloat(saved)||45));
+    left.style.width=pct+'%';
+    right.style.width=(100-pct)+'%';
+  }
+
+  splitter.addEventListener('mousedown',startDrag);
+  splitter.addEventListener('touchstart',startDrag,{passive:false});
+
+  function getClientX(e){return e.touches&&e.touches.length?e.touches[0].clientX:e.clientX;}
+  function startDrag(e){
+    if(window.innerWidth<=900)return;
+    e.preventDefault();
+    splitter.classList.add('dragging');
+    document.body.classList.add('resizing');
+    document.addEventListener('mousemove',onDrag);
+    document.addEventListener('mouseup',stopDrag);
+    document.addEventListener('touchmove',onDrag,{passive:false});
+    document.addEventListener('touchend',stopDrag);
+  }
+  function onDrag(e){
+    if(e.cancelable)e.preventDefault();
+    var rect=app.getBoundingClientRect();
+    var x=getClientX(e)-rect.left;
+    var pct=(x/rect.width)*100;
+    pct=Math.max(28,Math.min(72,pct));
+    left.style.width=pct+'%';
+    right.style.width=(100-pct)+'%';
+    localStorage.setItem('pbsuSplitLeftPct',pct.toFixed(1));
+  }
+  function stopDrag(){
+    splitter.classList.remove('dragging');
+    document.body.classList.remove('resizing');
+    document.removeEventListener('mousemove',onDrag);
+    document.removeEventListener('mouseup',stopDrag);
+    document.removeEventListener('touchmove',onDrag);
+    document.removeEventListener('touchend',stopDrag);
+  }
+}
+
+function toggleSharePoint(){
+  var app=document.querySelector('.app');
+  var btn=document.getElementById('sharepointToggle');
+  if(!app||!btn)return;
+  var collapsed=!app.classList.contains('sp-collapsed');
+  app.classList.toggle('sp-collapsed',collapsed);
+  btn.textContent=collapsed?'Expand':'Collapse';
+  btn.title=collapsed?'Expand SharePoint panel':'Collapse SharePoint panel';
+  localStorage.setItem('pbsuSharePointCollapsed',collapsed?'1':'0');
+}
+
+function restoreSharePointPanel(){
+  var app=document.querySelector('.app');
+  var btn=document.getElementById('sharepointToggle');
+  if(!app||!btn)return;
+  var collapsed=localStorage.getItem('pbsuSharePointCollapsed')==='1';
+  app.classList.toggle('sp-collapsed',collapsed);
+  btn.textContent=collapsed?'Expand':'Collapse';
+  btn.title=collapsed?'Expand SharePoint panel':'Collapse SharePoint panel';
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  restoreSharePointPanel();
+  initResizableSplit();
+
+  var card=document.getElementById('sharepointCard');
+  var app=document.querySelector('.app');
+  if(card&&app){
+    card.addEventListener('click',function(e){
+      if(app.classList.contains('sp-collapsed')){
+        e.preventDefault();
+        toggleSharePoint();
+      }
+    });
+  }
+});
+
+function $(id){return document.getElementById(id);}
+const ROSTER_MODE_STATE = { pp:{results:[], title:'PrePlanned OT'}, co:{results:[], title:'Confirm Off OT'} };
+const XNS='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+const XRNS='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+function rmUpper(v){return String(v??'').trim().toUpperCase();}
+function rmNorm(v){return String(v??'').trim();}
+function rmCleanName(v){return rmNorm(v).replace(/\s*\((?:X|NX)\)\s*$/i,'').replace(/\s+/g,' ').trim();}
+function rmXmlParse(txt){return new DOMParser().parseFromString(txt,'application/xml');}
+function rmByTag(el, tag){return Array.from(el.getElementsByTagNameNS(XNS, tag));}
+function rmColToNum(col){let n=0; for(const c of col)n=n*26+c.charCodeAt(0)-64; return n;}
+function rmNumToCol(n){let s=''; while(n>0){let m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-m)/26);} return s;}
+function rmCellRefToPos(ref){const m=/^([A-Z]+)(\d+)$/i.exec(ref); return {col:rmColToNum(m[1].toUpperCase()), row:parseInt(m[2],10)};}
+function rmEsc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function rmEscXml(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function rmExcelDate(serial){const n=Number(serial); if(!isFinite(n))return String(serial??''); const d=new Date(Math.round((n-25569)*86400*1000)); return isNaN(d)?String(serial):d.toISOString().slice(0,10);}
+function rmIsDate(v){const n=Number(v); return n>30000&&n<70000;}
+async function rmReadText(zip,path,opt=false){const f=zip.file(path); if(!f){if(opt)return ''; throw new Error('Missing '+path);} return await f.async('text');}
+async function rmShared(zip){const txt=await rmReadText(zip,'xl/sharedStrings.xml',true); if(!txt)return []; const doc=rmXmlParse(txt); return rmByTag(doc.documentElement,'si').map(si=>Array.from(si.getElementsByTagNameNS(XNS,'t')).map(t=>t.textContent||'').join(''));}
+const RM_INDEXED_COLORS=['000000','FFFFFF','FF0000','00FF00','0000FF','FFFF00','FF00FF','00FFFF','000000','FFFFFF','FF0000','00FF00','0000FF','FFFF00','FF00FF','00FFFF','800000','008000','000080','808000','800080','008080','C0C0C0','808080','9999FF','993366','FFFFCC','CCFFFF','660066','FF8080','0066CC','CCCCFF','000080','FF00FF','FFFF00','00FFFF','800080','800000','008080','0000FF','00CCFF','CCFFFF','CCFFCC','FFFF99','99CCFF','FF99CC','CC99FF','FFCC99','3366FF','33CCCC','99CC00','FFCC00','FF9900','FF6600','666699','969696','003366','339966','003300','333300','993300','993366','333399','333333'];
+function rmRosterVal(v){return String(v??'').trim().toUpperCase().replace(/\.0+$/,'');}
+function rmThemeRgb(theme,tint){const base=['FFFFFF','000000','EEECE1','1F497D','4F81BD','C0504D','9BBB59','8064A2','4BACC6','F79646'][Number(theme)]||''; if(!base)return ''; let r=parseInt(base.slice(0,2),16),g=parseInt(base.slice(2,4),16),b=parseInt(base.slice(4,6),16),t=Number(tint||0); const adj=x=>Math.round(t<0?x*(1+t):x+(255-x)*t); if(t){r=adj(r);g=adj(g);b=adj(b);} return [r,g,b].map(x=>Math.max(0,Math.min(255,x)).toString(16).padStart(2,'0')).join('').toUpperCase();}
+function rmColorFromEl(el){if(!el)return ''; let rgb=el.getAttribute('rgb')||''; if(rgb){rgb=rgb.toUpperCase(); if(rgb.length===8)rgb=rgb.slice(2); return rgb;} const indexed=el.getAttribute('indexed'); if(indexed!==null)return RM_INDEXED_COLORS[Number(indexed)]||''; const theme=el.getAttribute('theme'); if(theme!==null)return rmThemeRgb(theme, el.getAttribute('tint')); return '';}
+function rmClassify(rgb){
+  if(!rgb||rgb.length<6)return 'none';
+  const r=parseInt(rgb.slice(0,2),16), g=parseInt(rgb.slice(2,4),16), b=parseInt(rgb.slice(4,6),16);
+  if(g>=145 && g>=r+25 && g>=b+15)return 'green';
+  if(b>=145 && g>=110 && b>=r+8 && g>=r-25 && !(r>225&&g>225&&b>225))return 'blue';
+  return 'other';
+}
+function rmStyles(stylesXml){
+  const doc=rmXmlParse(stylesXml);
+  const fillsNode=rmByTag(doc.documentElement,'fills')[0];
+  const fills=fillsNode?Array.from(fillsNode.children):[];
+  const fillColors=fills.map(fill=>{
+    const pattern=fill.getElementsByTagNameNS(XNS,'patternFill')[0];
+    const ptype=pattern?pattern.getAttribute('patternType'):'';
+    if(ptype && ptype!=='solid')return {rgb:'',cls:'none'};
+    const fg=fill.getElementsByTagNameNS(XNS,'fgColor')[0]||fill.getElementsByTagNameNS(XNS,'bgColor')[0];
+    const rgb=rmColorFromEl(fg);
+    return {rgb,cls:rmClassify(rgb)};
+  });
+  const cellXfsNode=rmByTag(doc.documentElement,'cellXfs')[0];
+  const cellXfs=cellXfsNode?Array.from(cellXfsNode.children):[];
+  const styleFills=cellXfs.map(xf=>Number(xf.getAttribute('fillId')||0));
+  return {fillColors,styleFills};
+}
+function rmValue(c,shared){const t=c.getAttribute('t'); const v=c.getElementsByTagNameNS(XNS,'v')[0]; if(t==='s')return shared[Number(v?.textContent||0)]||''; if(t==='inlineStr')return Array.from(c.getElementsByTagNameNS(XNS,'t')).map(x=>x.textContent||'').join(''); return v?v.textContent:'';}
+function rmFill(c,styles){const s=Number(c.getAttribute('s')||0); const fillId=styles.styleFills[s]??0; return styles.fillColors[fillId]||{rgb:'',cls:'none'};}
+function rmFindSheet(sheets, wanted){const uw=rmUpper(wanted).replace(/\s+/g,''); return sheets.find(s=>rmUpper(s.name)===rmUpper(wanted))||sheets.find(s=>rmUpper(s.name).replace(/\s+/g,'')===uw);}
+async function rmAnalyseWorkbook(file, mode, sourceSheet){
+  if(!window.JSZip) throw new Error('JSZip library not loaded. Please check internet/CDN access and reload.');
+  const buf=await file.arrayBuffer(); const zip=await JSZip.loadAsync(buf);
+  const wbDoc=rmXmlParse(await rmReadText(zip,'xl/workbook.xml')); const relDoc=rmXmlParse(await rmReadText(zip,'xl/_rels/workbook.xml.rels'));
+  const rels=Object.fromEntries(Array.from(relDoc.documentElement.children).map(r=>[r.getAttribute('Id'),r.getAttribute('Target')]));
+  const sheets=Array.from(wbDoc.getElementsByTagNameNS(XNS,'sheet')).map(s=>({name:s.getAttribute('name'), id:s.getAttributeNS(XRNS,'id')||s.getAttribute('r:id')}));
+  const sheet=rmFindSheet(sheets, sourceSheet); if(!sheet)throw new Error('Cannot find sheet named '+sourceSheet+'. Found: '+sheets.map(s=>s.name).join(', '));
+  let target=rels[sheet.id]; if(!target)throw new Error('Cannot resolve worksheet path for '+sheet.name); if(!target.startsWith('xl/'))target='xl/'+target.replace(/^\//,'');
+  const shared=await rmShared(zip); const styles=rmStyles(await rmReadText(zip,'xl/styles.xml')); const sheetDoc=rmXmlParse(await rmReadText(zip,target));
+  const grid=new Map(); let maxCol=0,maxRow=0;
+  for(const row of Array.from(sheetDoc.getElementsByTagNameNS(XNS,'row'))){for(const c of Array.from(row.getElementsByTagNameNS(XNS,'c'))){const ref=c.getAttribute('r'); if(!ref)continue; const pos=rmCellRefToPos(ref); maxCol=Math.max(maxCol,pos.col); maxRow=Math.max(maxRow,pos.row); grid.set(ref.toUpperCase(),{ref,row:pos.row,col:pos.col,val:rmValue(c,shared),fill:rmFill(c,styles)});}}
+  let headerRow=null,idCol=null,nameCol=null,teamCol=null;
+  for(let r=1;r<=Math.min(maxRow,30);r++){let found={}; for(let c=1;c<=Math.min(maxCol,25);c++){const v=rmUpper(grid.get(rmNumToCol(c)+r)?.val); if(v==='ID'||v==='SERVICE ID')found.id=c; if(v==='NAME'||v==='OFFICER'||v==='OFFICER NAME')found.name=c; if(v==='TEAM')found.team=c;} if(found.id&&found.name&&found.team){headerRow=r; idCol=found.id; nameCol=found.name; teamCol=found.team; break;}}
+  if(!headerRow)throw new Error('Cannot identify header row with ID, Name and Team.');
+  const sourceIsRoster=rmUpper(sheet.name)==='ROSTER';
+  let scanCols=[];
+  if(sourceIsRoster){ scanCols=[mode==='pp'?6:5]; } else { const start=Math.max(idCol,nameCol,teamCol)+1; for(let c=start;c<=maxCol;c++)scanCols.push(c); }
+  const out=[];
+  for(let r=headerRow+1;r<=maxRow;r++){
+    const id=rmNorm(grid.get(rmNumToCol(idCol)+r)?.val), name=rmCleanName(grid.get(rmNumToCol(nameCol)+r)?.val), team=rmNorm(grid.get(rmNumToCol(teamCol)+r)?.val);
+    if(!id&&!name&&!team)continue;
+    for(const c of scanCols){const cell=grid.get(rmNumToCol(c)+r); const val=rmRosterVal(cell?.val); if(!cell||!val)continue; const fillCls=cell.fill.cls; let matchType=''; if(val==='2'&&fillCls==='blue')matchType='Rostered 2 in blue'; if(val==='OT2'&&fillCls==='green')matchType='Rostered OT2 in green'; if(matchType){const headerVal=grid.get(rmNumToCol(c)+headerRow)?.val||rmNumToCol(c); out.push({id,name,team,rosterDate:rmIsDate(headerVal)?rmExcelDate(headerVal):String(headerVal),cell:cell.ref,value:cell.val,detectedColor:fillCls,fillRgb:cell.fill.rgb,matchType});}}
+  }
+  return {results:out, info:{fileName:file.name,sheetName:sheet.name,headerRow,scan:sourceIsRoster?(mode==='pp'?'Column F':'Column E'):'All roster columns after Team', blueFills:styles.fillColors.filter(f=>f.cls==='blue').map(f=>f.rgb).filter(Boolean), greenFills:styles.fillColors.filter(f=>f.cls==='green').map(f=>f.rgb).filter(Boolean)}};
+}
+function rmUniqueExportRows(rows){
+  const seen=new Set();
+  const out=[];
+  for(const r of rows){
+    const clean={id:rmNorm(r.id),name:rmCleanName(r.name),team:rmNorm(r.team)};
+    const key=`${clean.id}||${clean.name}||${clean.team}`;
+    if(seen.has(key))continue;
+    seen.add(key);
+    out.push(clean);
+  }
+  return out;
+}
+function rmExportBodyRows(rows){
+  return [['ID','Name','Team'], ...rmUniqueExportRows(rows).map(r=>[r.id,r.name,r.team])];
+}
+function xlColName(n){
+  let s='';
+  while(n>0){let m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-m)/26);}
+  return s;
+}
+function buildExcelPreviewFromRows(bodyRows){
+  bodyRows=Array.isArray(bodyRows)?bodyRows:[];
+  const colCount=Math.max(1,...bodyRows.map(r=>Array.isArray(r)?r.length:0));
+  if(!bodyRows.length){
+    return `<div class="excel-preview"><table><tbody><tr><td colspan="${colCount}">No export rows found.</td></tr></tbody></table></div>`;
+  }
+  const headerRow=Array.isArray(bodyRows[0])?bodyRows[0]:[];
+  const headers=Array.from({length:colCount},(_,ci)=>{
+    const cls=ci===0?'xl-id':ci===1?'xl-name':ci===2?'xl-team':'';
+    return `<th class="${cls}">${rmEsc(headerRow[ci]??'')}</th>`;
+  }).join('');
+  const tr=bodyRows.slice(1).map(row=>{
+    row=Array.isArray(row)?row:[];
+    const cells=Array.from({length:colCount},(_,ci)=>{
+      const cls=ci===0?'xl-id':ci===1?'xl-name':ci===2?'xl-team':'';
+      return `<td class="${cls}">${rmEsc(row[ci]??'')}</td>`;
+    }).join('');
+    return `<tr>${cells}</tr>`;
+  }).join('');
+  return `<div class="excel-preview"><table><thead><tr>${headers}</tr></thead><tbody>${tr||`<tr><td colspan="${colCount}">No export rows found.</td></tr>`}</tbody></table></div>`;
+}
+function rmBuildExcelLikePreview(rows){
+  return buildExcelPreviewFromRows(rmExportBodyRows(rows));
+}
+function rmBuildRosterModeReview(mode,data){
+  const st=ROSTER_MODE_STATE[mode];
+  const exportRows=rmUniqueExportRows(data.results);
+  const detailRows=data.results.map(r=>`<tr><td>${rmEsc(r.matchType)}</td><td>${rmEsc(r.id)}</td><td>${rmEsc(r.name)}</td><td>${rmEsc(r.team)}</td><td>${rmEsc(r.rosterDate)}</td><td>${rmEsc(r.cell)}</td><td>${rmEsc(r.value)}</td><td><span class="cstag" style="background:#${rmEsc(r.fillRgb||'fff')}">${rmEsc(r.detectedColor)} ${rmEsc(r.fillRgb)}</span></td></tr>`).join('');
+  return `
+    <div class="alert ok">
+      <b>Workbook:</b> ${rmEsc(data.info.fileName)}<br>
+      <b>Sheet:</b> ${rmEsc(data.info.sheetName)} | <b>Header row:</b> ${data.info.headerRow} | <b>Scan:</b> ${rmEsc(data.info.scan)}<br>
+      <b>Detected colour:</b> Blue ${rmEsc(data.info.blueFills.join(', ')||'-')} | Green ${rmEsc(data.info.greenFills.join(', ')||'-')}
+    </div>
+    <div class="alert warn">
+      Use <b>Preview Excel table at bottom</b> to check the exact preview table before copying.
+    </div>
+    <div class="ctitle" style="margin-top:12px">Detection details <span class="ctag">${data.results.length} match(es)</span></div>
+    <div class="twrap">
+      <table class="ot">
+        <thead><tr><th>Rule</th><th>ID</th><th>Name</th><th>Team</th><th>Roster/Header</th><th>Cell</th><th>Value</th><th>Fill</th></tr></thead>
+        <tbody>${detailRows||'<tr><td colspan="4">No matches found.</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+async function runRosterModeAnalysis(mode){
+  const file=$(mode+'File').files[0], source=$(mode+'Source').value, msg=$(mode+'Msg'), review=$(mode+'Review'), previewBtn=$(mode+'PreviewBtn'), preview=$(mode+'ExcelPreview');
+  msg.innerHTML=''; review.style.display='none'; if(previewBtn)previewBtn.disabled=true; if(preview){preview.innerHTML=''; preview.style.display='none';}
+  ROSTER_MODE_STATE[mode].results=[];
+  if(!file){msg.innerHTML='<div class="alert err">Please choose Excel file first.</div>'; return;}
+  try{
+    msg.innerHTML='<div class="alert warn">Analysing '+rmEsc(source)+'...</div>';
+    const data=await rmAnalyseWorkbook(file, mode, source);
+    ROSTER_MODE_STATE[mode].results=data.results;
+    ROSTER_MODE_STATE[mode].info=data.info;
+    const exportRows=rmUniqueExportRows(data.results);
+    if(previewBtn)previewBtn.disabled=exportRows.length===0;
+    var copyBtn=$(mode+'CopyBtn'); if(copyBtn)copyBtn.disabled=exportRows.length===0;
+    msg.innerHTML='<div class="alert ok">Done. '+data.results.length+' matches found. Preview table has '+exportRows.length+' unique officer row(s). Click Preview Excel table at bottom to check before copying.</div>';
+    review.innerHTML=rmBuildRosterModeReview(mode,data);
+    review.style.display='block';
+  }catch(e){msg.innerHTML='<div class="alert err">'+rmEsc(e.message||e)+'</div>';}
+}
+function previewRosterModeXlsx(mode){
+  const st=ROSTER_MODE_STATE[mode];
+  const target=$(mode+'ExcelPreview');
+  if(!target||!st.results.length)return;
+  const exportRows=rmUniqueExportRows(st.results);
+  target.innerHTML=`
+    <div class="ctitle">Excel table preview <span class="ctag">${rmEsc(st.title)}</span></div>
+    <div class="alert warn">This is the exact table that will be copied.</div>
+    ${rmBuildExcelLikePreview(st.results)}
+  `;
+  target.style.display='block';
+  target.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function switchTool(mode){
+  var isOT=mode==='ot';
+  var isPP=mode==='pp';
+  var isCO=mode==='co';
+  document.getElementById('otMode').style.display=isOT?'block':'none';
+  document.getElementById('ppMode').style.display=isPP?'block':'none';
+  document.getElementById('coMode').style.display=isCO?'block':'none';
+  document.getElementById('modeOTBtn').classList.toggle('active',isOT);
+  document.getElementById('modePPBtn').classList.toggle('active',isPP);
+  document.getElementById('modeCOBtn').classList.toggle('active',isCO);
+}
+var masterData={grouping:null,roster:[],kah:{}};
+var photoB64='',photoMime='image/png';
+var flightRows=[],_otList=[],_skipped=false,_frid=0;
+
+function setStep(n){[1,2,3,4].forEach(function(i){var e=document.getElementById('s'+i);e.className='step'+(i===n?' active':i<n?' done':'');});}
+function goPanel(n){[1,2,3].forEach(function(i){document.getElementById('panel'+i).style.display='none';});document.getElementById('panel'+n).style.display='block';setStep(n);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function showMsg(id,text,type){var e=document.getElementById(id);if(e)e.innerHTML=text?'<div class="alert '+type+'">'+text+'</div>':'';}
+function setLoading(show,text){var o=document.getElementById('overlay');if(show){document.getElementById('loadtxt').textContent=text||'Working...';o.classList.add('show');}else o.classList.remove('show');}
+function etdNum(etd){var t=String(etd||'').replace(/[^0-9]/g,'');if(!t)return 0;if(t.length<=2)return parseInt(t)*100;return parseInt(t.slice(0,2))*100+parseInt(t.slice(2,4)||0);}
+function stripSuffix(name){return String(name||'').replace(/\s*\([A-Z]{1,4}\)\s*$/i,'').replace(/\s*-\s*NHB\s*$/i,'').replace(/\s+NHB\s*$/i,'').trim();}
+
+function chkReady(){
+  var k1=document.getElementById('apiKey').value.trim();
+  var k2=document.getElementById('apiKey2').value.trim();
+  var ok=(k1||k2)&&masterData.grouping!==null&&masterData.roster.length>0&&!!photoB64;
+  document.getElementById('analyseBtn').disabled=!ok;
+  if(ok){
+      var method = (k1 && k2) ? 'Dual-API Failover (Gemini + OpenRouter)' : (k1 ? 'Gemini Only' : 'OpenRouter Only');
+      showMsg('p1msg','All files loaded - ready to analyse! Using ' + method + '.','ok');
+  }
+}
+
+async function callGeminiAPI(key, model, prompt, b64, mime){
+  var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key;
+  var payload = {
+    contents: [{
+      parts: [
+        { text: prompt },
+        { inline_data: { mime_type: mime, data: b64 } }
+      ]
+    }],
+    generationConfig: { response_mime_type: "application/json" }
+  };
+  var resp = await fetch(url,{ method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify(payload) });
+  var data = await resp.json().catch(function(){return {};});
+  
+  if(!resp.ok) throw new Error((data.error && data.error.message) || ("HTTP " + resp.status));
+  if(!data.candidates || !data.candidates[0].content) throw new Error("No content returned from Gemini");
+  
+  return {
+      text: data.candidates[0].content.parts[0].text,
+      provider: 'Google Gemini',
+      model: model
+  };
+}
+
+async function callOpenRouterAPI(key, model, prompt, b64, mime){
+  var payload = {
+      model: model,
+      messages: [{
+          role: "user",
+          content: [
+              { type: "text", text: prompt },
+              { type: "image_url", image_url: { url: "data:" + mime + ";base64," + b64 } }
+          ]
+      }]
+  };
+  var resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+          "Authorization": "Bearer " + key,
+          "Content-Type": "application/json",
+          "HTTP-Referer": window.location.href,
+          "X-Title": "PBSU T2 OT Claim"
+      },
+      body: JSON.stringify(payload)
+  });
+  var data = await resp.json().catch(function(){return {};});
+  
+  if(!resp.ok) throw new Error((data.error && data.error.message) || ("HTTP " + resp.status));
+  if(!data.choices || !data.choices[0].message) throw new Error("No content returned from OpenRouter");
+  
+  return {
+      text: data.choices[0].message.content,
+      provider: 'OpenRouter',
+      model: model
+  };
+}
+
+function loadMaster(inp){
+  var f=inp.files[0];if(!f)return;
+  document.getElementById('mName').textContent=f.name;
+  var rd=new FileReader();
+  rd.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'array',cellStyles:true});
+      var gName=wb.SheetNames.find(function(s){return s.toLowerCase().includes('grouping');});
+      var rName=wb.SheetNames.find(function(s){return s.toLowerCase().includes('roster');});
+      var kName=wb.SheetNames.find(function(s){return s.toLowerCase().includes('kah');});
+      var aName=wb.SheetNames.find(function(s){return s.toLowerCase().includes('api');});
+      if(!gName)throw new Error("No 'grouping' tab found");
+      if(!rName)throw new Error("No 'roster' tab found");
+      masterData.grouping=parseGrouping(wb.Sheets[gName]);
+      masterData.roster=parseRoster(wb.Sheets[rName]);
+      masterData.kah=kName?parseKAH(wb.Sheets[kName]):{};
+      if(aName){
+        var ar=XLSX.utils.sheet_to_json(wb.Sheets[aName],{header:1,defval:''});
+        for(var i=0;i<ar.length;i++)for(var j=0;j<ar[i].length;j++){var cv=String(ar[i][j]).trim();if(cv.length>10){
+            if(cv.startsWith('AIzaSy')){
+                if(!document.getElementById('apiKey').value)document.getElementById('apiKey').value=cv;
+            } else if(cv.startsWith('sk-or-v1-')){
+                if(!document.getElementById('apiKey2').value)document.getElementById('apiKey2').value=cv;
+            } else {
+                if(!document.getElementById('apiKey').value)document.getElementById('apiKey').value=cv;
+            }
+          }}
+      }
+      document.getElementById('mz').classList.add('done');
+      chkReady();
+    }catch(ex){showMsg('p1msg','Excel error: '+ex.message,'err');}
+  };
+  rd.readAsArrayBuffer(f);
+}
+
+function isCellYellow(cellObj){
+  if(!cellObj||!cellObj.s)return false;
+  var fg=cellObj.s.fgColor||{};
+  var rgb=String(fg.rgb||fg.argb||'').toUpperCase();
+  return rgb==='FFFFFF00'||rgb==='FFFF00';
+}
+
+function loadPhoto(inp){
+  var f=inp.files[0];if(!f)return;
+  document.getElementById('pName').textContent=f.name;
+  photoMime=f.type||'image/png';
+  var rd=new FileReader();
+  rd.onload=function(e){
+    photoB64=e.target.result.split(',')[1];
+    var img=document.getElementById('thumb');img.src=e.target.result;img.style.display='block';
+    document.getElementById('pz').classList.add('done');
+    chkReady();
+  };
+  rd.readAsDataURL(f);
+}
+
+function parseKAH(ws){
+  var rows = Array.isArray(ws) ? ws : XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
+  var d={};
+  for(var i=1;i<rows.length;i++){var id=String(rows[i][0]||'').trim();if(id.match(/^\d{4,}$/))d[id]=true;}
+  return d;
+}
+
+function parseGrouping(ws){
+  var rows = Array.isArray(ws) ? ws : XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  var officerMap={};
+  var concourse=[];
+  var currentCallsignL='',currentCallsignR='';
+  var currentTeam='';
+  
+  function setGroupedOfficer(id,obj){
+    var old=officerMap[id];
+    if(old&&old.callsign&&!obj.callsign){
+      officerMap[id]={
+        name:obj.name||old.name,
+        callsign:old.callsign,
+        team:obj.team||old.team,
+        rem:(obj.rem&&obj.rem.trim())?obj.rem:old.rem
+      };
+    }else{
+      officerMap[id]=obj;
+    }
+  }
+
+  for(var i=0;i<rows.length;i++){
+    var row=rows[i];
+    var joined=row.join('\t');
+
+    // 1. 固定 CC 人员在第 24 到 29 行 (索引 23 到 28)
+    if(i >= 23 && i <= 28) {
+      var ccIdC = String(row[2]||'').trim();
+      var ccNmC = stripSuffix(String(row[3]||''));
+      var ccRemC = String(row[4]||'').trim();
+      
+      var ccIdG = String(row[6]||'').trim();
+      var ccNmG = stripSuffix(String(row[7]||''));
+      var ccRemG = String(row[8]||'').trim();
+      
+      if(/^\d{4,}$/.test(ccIdC)) {
+          var tlC=''; if(/TEAM\s*([ABC])/i.test(ccRemC)) tlC=ccRemC.match(/TEAM\s*([ABC])/i)[1].toUpperCase();
+          concourse.push({id:ccIdC, name:ccNmC, ccTeam:tlC, rem:ccRemC});
+      }
+      if(/^\d{4,}$/.test(ccIdG)) {
+          var tlG=''; if(/TEAM\s*([ABC])/i.test(ccRemG)) tlG=ccRemG.match(/TEAM\s*([ABC])/i)[1].toUpperCase();
+          concourse.push({id:ccIdG, name:ccNmG, ccTeam:tlG, rem:ccRemG});
+      }
+      continue;
+    }
+
+    // 2. 团队识别逻辑 (寻找 TEAM XX)
+    var rowHasTeam=false;
+    for(var ci=0;ci<row.length;ci++){
+      var tm=String(row[ci]||'').trim().match(/^TEAM\s*([A-Z0-9]+)/i);
+      if(tm){currentTeam=tm[0];rowHasTeam=true;}
+    }
+
+    if(rowHasTeam || joined.trim()===''){
+      currentCallsignL='';
+      currentCallsignR='';
+    }
+
+    var colC = String(row[2]||'').trim().toUpperCase();
+    if(colC === 'TEAM CALL SIGN') currentCallsignL = String(row[3]||'').trim(); 
+
+    var colG = String(row[6]||'').trim().toUpperCase();
+    if(colG === 'TEAM CALL SIGN') currentCallsignR = String(row[7]||'').trim(); 
+
+    var idC=String(row[2]||'').trim();
+    var idG=String(row[6]||'').trim();
+
+    var remC=String(row[4]||'').trim()+' '+String(row[5]||'').trim();
+    if(/CRF/i.test(String(row[1]||'')) || /CRF/i.test(colC)) remC+=' CRF';
+    
+    var remG=String(row[8]||'').trim()+' '+String(row[9]||'').trim();
+    if(/CRF/i.test(String(row[5]||'')) || /CRF/i.test(colG)) remG+=' CRF';
+
+    if(/^\d{4,}$/.test(idC) && !/SERVICE\s*ID/i.test(idC)){
+      var nmC=stripSuffix(String(row[3]||''));
+      if(nmC && colC !== 'TEAM CALL SIGN'){
+        setGroupedOfficer(idC, { name:nmC, callsign:currentCallsignL, team:currentTeam, rem:remC });
+      }
+    }
+
+    if(/^\d{4,}$/.test(idG) && !/SERVICE\s*ID/i.test(idG)){
+      var nmG=stripSuffix(String(row[7]||''));
+      if(nmG && colG !== 'TEAM CALL SIGN'){
+        setGroupedOfficer(idG, { name:nmG, callsign:currentCallsignR, team:currentTeam, rem:remG });
+      }
+    }
+  }
+  return{officerMap:officerMap,concourse:concourse};
+}
+
+function parseRoster(ws, isFromGAS){
+  var rows = isFromGAS ? ws.values : XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
+  var bgs = isFromGAS ? ws.backgrounds : null;
+  
+  var result=[];
+  var headerRow=-1;
+  for(var i=0;i<Math.min(rows.length,10);i++){
+    if(rows[i].some(function(c){return String(c).trim().toUpperCase()==='ID'||String(c).trim().toUpperCase()==='SERVICE ID';})){headerRow=i;break;}
+  }
+  if(headerRow===-1)headerRow=0;
+  
+  var idCol=0,nameCol=1,teamCol=2,statusCol=3;
+  for(var c=0;c<rows[headerRow].length;c++){
+    var txt=String(rows[headerRow][c]).trim().toUpperCase();
+    if(txt==='ID'||txt==='SERVICE ID')idCol=c;
+    else if(txt==='NAME')nameCol=c;
+    else if(txt==='TEAM')teamCol=c;
+    else if(txt.match(/^\d{4}-\d{2}-\d{2}$/)||txt.match(/^\d{1,2}[-\/][A-Z]{3}/i)||c===3)statusCol=c;
+  }
+  
+  for(var ri=headerRow+1;ri<rows.length;ri++){
+    var r=rows[ri];
+    if(/OT\s*TRACKING/i.test(r.join(' ')))break;
+    var id=String(r[idCol]||'').trim();
+    if(!/^\d{4,}$/.test(id))continue;
+    
+    var name=stripSuffix(String(r[nameCol]||'').trim());
+    var team=String(r[teamCol]||'').trim();
+    var statusRaw=String(r[statusCol]!==undefined?r[statusCol]:'').trim();
+    
+    var isNHB = false;
+    if (isFromGAS) {
+       var bgColor = String(bgs[ri][statusCol] || '').toLowerCase();
+       isNHB = (bgColor === '#ffff00' || bgColor === '#ffffff00');
+    } else {
+       isNHB = isCellYellow(ws[XLSX.utils.encode_cell({r:ri,c:statusCol})]);
+    }
+    
+    result.push({id:id,name:name,team:team,status:statusRaw,isNHB:isNHB});
+  }
+  return result;
+}
+
+function classifyCS(cs){
+  var s=cs.trim();
+  if(/^\d+RS\b/i.test(s)||/^RS\b/i.test(s)||/\bRS\s*CQ\b/i.test(s)||/\bCQ\b/.test(s))return'rs';
+  if(/^T[23]\s*[\(\[]/.test(s)||/^T[23]\s+FUNG/i.test(s))return'rs';
+  if(/^AA\d/i.test(s)||/^A[1-9]\s*[\(\[]/i.test(s))return'rs';
+  if(/^EARLY RUN/i.test(s)||/^STANDBY/i.test(s)||/^ONGOING/i.test(s)||/^COLECT/i.test(s)||/^COLLECT/i.test(s))return'rs';
+  
+  if(/(?:0[678]00|[78]\s*[ap]m|pm\s*[78]).*?(?:cc|con)|(?:cc|con).*?(?:0[678]00|[78]\s*[ap]m|pm\s*[78])/i.test(s)) return 'gs';
+  
+  if(/JASLYN|YAO\s*\dGS|EE\s*\dGS|IRFAN\s*\dGS|YEO SL/i.test(s)&&!/\(\d\)\s*[12]X/i.test(s))return'gs';
+  if(/\b[28]GS\b/i.test(s)||/\bGS\/F\b/i.test(s)||/\bGS\b/.test(s))return'gs';
+  return'pb';
+}
+
+function normalizeCS(cs){
+  return String(cs||'').toLowerCase()
+    .replace(/t2\s*pm\s*/i,'').replace(/^\d+[-\s]/,'')
+    .replace(/\(\d+\)/g,'').replace(/\[\d+\]/g,'')
+    .replace(/\d+x\*?$/gi,'').replace(/\/f\*?$/gi,'')
+    .replace(/\bgs\/f\b/gi,'').replace(/\bgs\b/gi,'')
+    .replace(/\*$/,'').replace(/[_\-]+/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
+
+function nameTokensForFlightMatch(name){
+  var stop={AP:1,A:1,P:1,AL:1,BIN:1,BTE:1,BINTE:1,SO:1,DO:1,MOHD:1,MUHAMMAD:1,MOHAMMAD:1,NUR:1,SITI:1};
+  return String(name||'').toUpperCase()
+    .replace(/[^A-Z\s]/g,' ')
+    .split(/\s+/).filter(function(w){return w.length>3&&!stop[w];});
+}
+
+function findBestByOfficerName(name,bestPerCS){
+  var toks=nameTokensForFlightMatch(name);
+  if(!toks.length)return null;
+  var keys=Object.keys(bestPerCS);
+  for(var i=0;i<toks.length;i++){
+    var t=toks[i].toLowerCase();
+    var k=keys.find(function(key){
+      return key.split(' ').some(function(kw){return kw===t;});
+    });
+    if(k)return bestPerCS[k];
+  }
+  return null;
+}
+
+function findBestByGroupingCallsign(callsign,bestPerCS){
+  var csNorm=normalizeCS(callsign);
+  if(!csNorm)return null;
+  if(bestPerCS[csNorm])return bestPerCS[csNorm];
+  var csWords=csNorm.split(' ').filter(function(w){return w.length>2;});
+  var keys=Object.keys(bestPerCS);
+  var fk=keys.find(function(k){
+    var kWords=k.split(' ').filter(function(w){return w.length>2;});
+    return kWords.some(function(kw){return csWords.indexOf(kw)>=0;}) ||
+           csWords.some(function(cw){return kWords.indexOf(cw)>=0;});
+  });
+  return fk?bestPerCS[fk]:null;
+}
+
+function parseManualText(text){
+  if(!text||!text.trim())return[];
+  var result=[];
+  text.split('\n').forEach(function(line){
+    line=line.trim();if(!line)return;
+    var flMatch=line.match(/\b((?:[A-Z]{2,3}|[0-9][A-Z])\s*\d{1,4}[A-Z]?)\b/i);
+    var timeMatch=line.match(/\b(\d{4})\s*(?:hrs|HRS)?\b/i);
+    var gateMatch=line.match(/\b([A-Z]\d{1,3}[A-Z]?)\b(?!\d)/i);
+    if(flMatch){
+      var beforeFlight=line.substring(0,flMatch.index);
+      if(gateMatch&&beforeFlight.includes(gateMatch[0]))beforeFlight=beforeFlight.replace(gateMatch[0],'');
+      beforeFlight=beforeFlight.replace(/^[\d\.\)\s]+/,'').replace(/[-\s]+$/,'');
+      beforeFlight.split(/\/|&|,|\band\b/i).forEach(function(chunk){
+        var cleanName=chunk.replace(/[^a-z\s]/gi,'').replace(/\s+/g,' ').trim().toLowerCase();
+        if(cleanName.length>2)result.push({
+          namePart:cleanName,
+          fl:flMatch[1].replace(/\s+/g,'').toUpperCase(),
+          gate:gateMatch&&gateMatch[0]!==flMatch[0]?gateMatch[1].toUpperCase():'',
+          etd:timeMatch?timeMatch[1]:''
+        });
+      });
+    }
+  });
+  return result;
+}
+
+async function runAnalysis(){
+  var geminiKey = document.getElementById('apiKey').value.trim();
+  var orKey = document.getElementById('apiKey2').value.trim();
+  var geminiModel = document.getElementById('modelPrimary').value;
+  var orModel = document.getElementById('modelFallback').value;
+
+  if(!geminiKey && !orKey){
+      showMsg('p1msg','Please enter at least one valid API key (Gemini or OpenRouter).','err');
+      return;
+  }
+
+  var expectedNames=[];
+  var gData=masterData.grouping;
+  if(gData&&gData.officerMap){
+    var csSet=new Set();
+    Object.values(gData.officerMap).forEach(function(o){if(o.callsign&&o.callsign.includes('('))csSet.add(o.callsign);});
+    expectedNames=Array.from(csSet);
+  }
+
+  document.getElementById('aSpin').style.display='inline-block';
+  document.getElementById('analyseBtn').disabled=true;
+  setLoading(true,'Analysing flight photo with AI...');
+  showMsg('p1msg','','');
+
+  var prompt='You are transcribing a flight deployment table from an airport operations screenshot.\n\n';
+  if(expectedNames.length>0){
+    prompt+='CRITICAL ACCURACY: Match blurry text to these exact officer call signs:\n'+expectedNames.join(' | ')+'\n\n';
+  } else {
+    prompt+='CRITICAL ACCURACY: Copy call signs EXACTLY as they appear in the image.\n\n';
+  }
+  prompt+='The table has ONE ROW PER FLIGHT. Columns: ETD | Flight number | Destination | Gate | Aircraft | Preboarding officer call signs | GS call signs | Additional codes\n\nFor EACH flight row output one JSON object:\n- "etd": 4-digit time string (e.g. "0850")\n- "flight": flight number (e.g. "SQ910", "AI2106", "UA2")\n- "gate": gate code (e.g. "F50", "E11")\n- "callsigns": array of ALL team call signs\n\nINCLUDE: Preboarding officers (e.g. "SHAREN (3) 2X", "T2 PM ESHIKAA (3) 1X", "N RAJ (3) 2X"), GS/CC (e.g. "CC 7AM (2)", "8-YAO 2GS"), RS/team codes (e.g. "T3 FUNG (3)", "3RS CQ", "A1(3)*")\n\nEXCLUDE: Individual officer names, destination codes, aircraft types, PAX, GOEM, VIPC, RETIMED, STANDBY GATE, EARLY RUN, COLECT PASS, ONGOING\n\nOne flight may span multiple lines - collect ALL call signs into ONE object.\nReturn ONLY a valid JSON array. No markdown.\n\nExample:\n[{"etd":"0850","flight":"SQ910","gate":"F50","callsigns":["HANISAH (3) 2X*","CC 7AM (2)","AA1 (3) CG"]}]';
+  
+  var finalResult = null;
+  var errLog = [];
+
+  // --- ATTEMPT 1: Google Gemini ---
+  if(geminiKey) {
+      try {
+          setLoading(true, 'Requesting Google Gemini...');
+          finalResult = await callGeminiAPI(geminiKey, geminiModel, prompt, photoB64, photoMime);
+      } catch(e) {
+          errLog.push("Gemini Error: " + e.message);
+      }
+  } else {
+      errLog.push("Gemini skipped (No Key provided).");
+  }
+
+  // --- ATTEMPT 2: OpenRouter Fallback ---
+  if(!finalResult && orKey) {
+      try {
+          setLoading(true, 'Gemini failed/congested. Switching to OpenRouter (' + orModel + ')...');
+          finalResult = await callOpenRouterAPI(orKey, orModel, prompt, photoB64, photoMime);
+      } catch(e) {
+          errLog.push("OpenRouter Error: " + e.message);
+      }
+  }
+
+  // --- HANDLE FAILURE ---
+  if(!finalResult) {
+      setLoading(false);
+      document.getElementById('aSpin').style.display='none';
+      document.getElementById('analyseBtn').disabled=false;
+      showMsg('p1msg','AI Analysis Failed:<br>' + errLog.join('<br>') + '<br><br>Check your API keys, rate limits, or try again later.','err');
+      return;
+  }
+
+  // --- HANDLE SUCCESS & PARSE JSON ---
+  try{
+    showMsg('p1msg','AI success using ' + finalResult.provider + ' (' + finalResult.model + ').','ok');
+    
+    // Extra strong JSON extraction (Handles markdown wrappers from Open Source models)
+    var clean = finalResult.text;
+    var startIdx = clean.indexOf('[');
+    var endIdx = clean.lastIndexOf(']');
+    if(startIdx !== -1 && endIdx !== -1) {
+        clean = clean.substring(startIdx, endIdx + 1);
+    } else {
+        clean = clean.replace(/```json|```/gi,'').trim();
+    }
+    
+    var parsed = JSON.parse(clean);
+    
+    setLoading(false);
+    buildFlightTable(parsed);
+    goPanel(2);
+  }catch(ex){
+    setLoading(false);
+    document.getElementById('aSpin').style.display='none';
+    document.getElementById('analyseBtn').disabled=false;
+    showMsg('p1msg','Failed to parse AI output as JSON:<br>'+esc(ex.message) + '<br>Raw Output: ' + esc(finalResult.text.substring(0, 200)),'err');
+  }
+}
+
+function buildFlightTable(parsed){
+  flightRows=parsed.map(function(f){
+    return{id:'fr'+(++_frid),etd:f.etd||'',flight:f.flight||'',gate:f.gate||'',
+      callsigns:(f.callsigns||[]).map(function(cs){return{text:cs,type:classifyCS(cs)};})};
+  });
+  renderFlightTable();
+  document.getElementById('flightCount').textContent=flightRows.length+' flights';
+}
+
+function renderFlightTable(){
+  var tbody=document.getElementById('flightBody');tbody.innerHTML='';
+  flightRows.forEach(function(row){
+    var tr=document.createElement('tr');
+    tr.id='ftr-'+row.id;
+    tr.setAttribute('data-search',(row.flight+' '+row.gate+' '+row.callsigns.map(function(c){return c.text;}).join(' ')).toLowerCase());
+    var tdE=document.createElement('td');tdE.innerHTML='<input class="inl" style="width:50px" value="'+esc(row.etd)+'" placeholder="0800" onchange="updRow(\''+row.id+'\',\'etd\',this.value)">';
+    var tdF=document.createElement('td');tdF.innerHTML='<input class="inl" style="width:66px" value="'+esc(row.flight)+'" placeholder="SQ910" onchange="updRow(\''+row.id+'\',\'flight\',this.value)">';
+    var tdG=document.createElement('td');tdG.innerHTML='<input class="inl" style="width:44px" value="'+esc(row.gate)+'" placeholder="F40" onchange="updRow(\''+row.id+'\',\'gate\',this.value)">';
+    var tdCS=document.createElement('td');tdCS.appendChild(buildCSCell(row));
+    var tdD=document.createElement('td');tdD.style.textAlign='center';
+    tdD.innerHTML='<button class="delrow" onclick="delFlightRow(\''+row.id+'\')" title="Remove">x</button>';
+    tr.appendChild(tdE);tr.appendChild(tdF);tr.appendChild(tdG);tr.appendChild(tdCS);tr.appendChild(tdD);
+    tbody.appendChild(tr);
+  });
+}
+
+function buildCSCell(row){
+  var div=document.createElement('div');div.className='cstags';div.id='csc-'+row.id;
+  row.callsigns.forEach(function(cs,idx){div.appendChild(makeCSTag(row.id,idx,cs.text,cs.type));});
+  var ab=document.createElement('button');ab.className='addcs';ab.textContent='+ add';
+  ab.onclick=function(){
+    var inp=document.createElement('input');inp.className='csedit';inp.placeholder='Call sign...';
+    ab.replaceWith(inp);inp.focus();
+    function commit(){var v=inp.value.trim();if(v)row.callsigns.push({text:v,type:classifyCS(v)});refreshCSCell(row);}
+    inp.onblur=commit;
+    inp.onkeydown=function(e){if(e.key==='Enter')commit();if(e.key==='Escape'){inp.value='';commit();}};
+  };
+  div.appendChild(ab);return div;
+}
+
+function makeCSTag(rowId,idx,text,type){
+  var span=document.createElement('span');span.className='cstag '+type;
+  span.innerHTML=esc(text)+'<button class="rm" onclick="removeCS(\''+rowId+'\','+idx+')">x</button>';
+  return span;
+}
+
+function refreshCSCell(row){
+  var cell=document.getElementById('csc-'+row.id);if(!cell)return;
+  cell.parentNode.replaceChild(buildCSCell(row),cell);
+  var tr=document.getElementById('ftr-'+row.id);
+  if(tr)tr.setAttribute('data-search',(row.flight+' '+row.gate+' '+row.callsigns.map(function(c){return c.text;}).join(' ')).toLowerCase());
+}
+
+function removeCS(rowId,idx){var row=flightRows.find(function(r){return r.id===rowId;});if(row){row.callsigns.splice(idx,1);refreshCSCell(row);}}
+function updRow(rowId,field,value){var row=flightRows.find(function(r){return r.id===rowId;});if(row)row[field]=value.trim();}
+function delFlightRow(rowId){flightRows=flightRows.filter(function(r){return r.id!==rowId;});var tr=document.getElementById('ftr-'+rowId);if(tr)tr.remove();document.getElementById('flightCount').textContent=flightRows.length+' flights';}
+
+function addFlightRow(){
+  var row={id:'fr'+(++_frid),etd:'',flight:'',gate:'',callsigns:[]};flightRows.push(row);
+  var tbody=document.getElementById('flightBody');var tr=document.createElement('tr');
+  tr.id='ftr-'+row.id;tr.setAttribute('data-search','');
+  var tdE=document.createElement('td');tdE.innerHTML='<input class="inl" style="width:50px" value="" placeholder="0800" onchange="updRow(\''+row.id+'\',\'etd\',this.value)">';
+  var tdF=document.createElement('td');tdF.innerHTML='<input class="inl" style="width:66px" value="" placeholder="SQ910" onchange="updRow(\''+row.id+'\',\'flight\',this.value)">';
+  var tdG=document.createElement('td');tdG.innerHTML='<input class="inl" style="width:44px" value="" placeholder="F40" onchange="updRow(\''+row.id+'\',\'gate\',this.value)">';
+  var tdCS=document.createElement('td');tdCS.appendChild(buildCSCell(row));
+  var tdD=document.createElement('td');tdD.style.textAlign='center';tdD.innerHTML='<button class="delrow" onclick="delFlightRow(\''+row.id+'\')">x</button>';
+  tr.appendChild(tdE);tr.appendChild(tdF);tr.appendChild(tdG);tr.appendChild(tdCS);tr.appendChild(tdD);
+  tbody.appendChild(tr);
+  document.getElementById('flightCount').textContent=flightRows.length+' flights';
+}
+
+function filterFlights(q){
+  document.querySelectorAll('#flightBody tr').forEach(function(r){
+    var txt=r.getAttribute('data-search')||'';r.style.display=(!q||txt.includes(q.toLowerCase()))?'':'none';
+  });
+}
+
+function buildOT(){
+  var gData=masterData.grouping;
+  if(!gData){showMsg('p2msg','No grouping data loaded.','err');return;}
+  var rosterList=masterData.roster;
+  if(!rosterList.length){showMsg('p2msg','Could not read roster.','err');return;}
+  var kahMap=masterData.kah||{};
+  var manualData=parseManualText(document.getElementById('manualText').value);
+
+  // --- SMART PRESERVE MANUAL NOTES MEMORY CACHE ---
+  var preservedNotes = {};
+  _otList.forEach(function(o){
+    var el = document.getElementById('otnote_' + o.id);
+    if(el) {
+      var oldAuto = '';
+      if (o.isKAH) oldAuto = 'SUPERVISOR DUTY';
+      else if (o.flight) oldAuto = o.flight;
+
+      if (el.value !== oldAuto) {
+        preservedNotes[o.id] = el.value;
+      }
+    }
+  });
+  // ------------------------------------------------
+
+  var bestPerCS={};
+  var ccBest={A:null,B:null,C:null};
+  var bC_flights=[];
+  
+  flightRows.forEach(function(row){
+    var n=etdNum(row.etd);
+    row.callsigns.forEach(function(cs){
+      var type=cs.type||classifyCS(cs.text);
+      var key=normalizeCS(cs.text);
+      if(type==='pb'){if(!bestPerCS[key]||n>bestPerCS[key].etdNum)bestPerCS[key]={fl:row.flight,gate:row.gate,etd:row.etd,etdNum:n};}
+      
+      var csl=String(cs.text||'').toLowerCase();
+      
+      var isTeamA = /(?:0[67]00|7\s*[ap]m|pm\s*7).*?(?:cc|con)|(?:cc|con).*?(?:0[67]00|7\s*[ap]m|pm\s*7)/i.test(csl);
+      var isTeamBC = /(?:0800|8\s*[ap]m|pm\s*8).*?(?:cc|con)|(?:cc|con).*?(?:0800|8\s*[ap]m|pm\s*8)/i.test(csl);
+
+      if(isTeamA){
+        if(!ccBest.A||n>etdNum(ccBest.A.etd))ccBest.A={fl:row.flight,gate:row.gate,etd:row.etd};
+      }
+      if(isTeamBC){
+        bC_flights.push({fl:row.flight,gate:row.gate,etd:row.etd,etdNum:n});
+      }
+    });
+  });
+
+  if(bC_flights.length > 0) {
+      bC_flights.sort(function(a, b){ return a.etdNum - b.etdNum; });
+      ccBest.B = {fl:bC_flights[0].fl, gate:bC_flights[0].gate, etd:bC_flights[0].etd};
+      var last = bC_flights[bC_flights.length - 1];
+      ccBest.C = {fl:last.fl, gate:last.gate, etd:last.etd};
+  }
+
+  var ccMap={};
+  (gData.concourse||[]).forEach(function(c){ccMap[c.id]={ccTeam:c.ccTeam,rem:c.rem||''};});
+
+  var groupFlightById={};
+  Object.keys(gData.officerMap||{}).forEach(function(gid){
+    var go=gData.officerMap[gid];
+    if(!go||!go.callsign)return;
+    var gb=findBestByGroupingCallsign(go.callsign,bestPerCS);
+    if(gb)groupFlightById[gid]=gb;
+  });
+
+  _otList=[];
+  rosterList.forEach(function(ro){
+    var id=ro.id,name=ro.name,team=ro.team;
+    var statusRaw=ro.status,isNHB=ro.isNHB;
+    var claimOT=false,skipReason='';
+    if(String(statusRaw)==='2'&&!isNHB)claimOT=true;
+    else if(/OT2/i.test(String(statusRaw))&&!isNHB)claimOT=true;
+    else if((String(statusRaw)==='2'||/OT2/i.test(String(statusRaw)))&&isNHB)skipReason='NHB';
+    else skipReason=String(statusRaw)||'blank';
+
+    var flight='',gate='',etd='',ccRole='',rem='';
+    var isCC=!!ccMap[id];
+    var isKAH=!!kahMap[id];
+    var gOfficer=gData.officerMap[id]||null;
+    if(gOfficer)rem=gOfficer.rem||'';
+    var isCRF=/CRF/i.test(rem)||/CRF/i.test(team)||(gOfficer&&/CRF/i.test(gOfficer.callsign));
+    if(!team&&gOfficer&&gOfficer.team)team=gOfficer.team;
+
+    if(claimOT){
+      if(isKAH){
+      } else {
+        var matched=null;
+        for(var m=0;m<manualData.length;m++){
+          var np=manualData[m].namePart;
+          var nameFull=(name+' '+(gOfficer?gOfficer.name:'')).toLowerCase();
+          if(nameFull.includes(np)){matched=manualData[m];break;}
+          var firstWord=np.split(' ')[0];
+          if(firstWord.length>2&&nameFull.includes(firstWord)){matched=manualData[m];break;}
+        }
+        if(matched){flight=matched.fl;gate=matched.gate;etd=matched.etd;}
+        else if(isCC){
+          var ccInfo=ccMap[id];
+          var cbd=ccBest[ccInfo.ccTeam];
+          if(cbd){flight=cbd.fl;gate=cbd.gate;etd=cbd.etd;}
+          ccRole='CC-'+ccInfo.ccTeam;
+        } else if(groupFlightById[id]&&!isCRF){
+          var gb=groupFlightById[id];
+          flight=gb.fl;gate=gb.gate;etd=gb.etd;
+        } else if(gOfficer&&gOfficer.callsign&&!isCRF){
+          var best=findBestByGroupingCallsign(gOfficer.callsign,bestPerCS);
+          if(best){flight=best.fl;gate=best.gate;etd=best.etd;}
+        }
+        if(!flight){
+          var nameBest=findBestByOfficerName(name,bestPerCS);
+          if(nameBest){flight=nameBest.fl;gate=nameBest.gate;etd=nameBest.etd;}
+        }
+      }
+    }
+
+    _otList.push({
+      id:id, name:name, team:team, status:statusRaw, isNHB:isNHB, 
+      claimOT:claimOT, skipReason:skipReason, flight:flight, gate:gate, 
+      etd:etd, ccRole:ccRole, rem:rem, isCRF:isCRF, isKAH:isKAH,
+      preservedNote: preservedNotes[id] 
+    });
+  });
+
+  renderOTTable(_otList);
+  showMsg('p2msg','','');
+  var cpBtn=document.getElementById('copyPreviewBtn');if(cpBtn)cpBtn.disabled=false;
+  goPanel(3);
+}
+
+function renderOTTable(list){
+  var body=document.getElementById('otBody');body.innerHTML='';
+  var total=list.length,ot=0,skip=0,warn=0;
+  list.forEach(function(o){
+    if(o.claimOT)ot++;else skip++;
+    if(o.claimOT&&!o.flight&&!o.isKAH)warn++;
+    var row=document.createElement('tr');
+    row.className=o.claimOT?'':'skiprow';
+    
+    if(!o.claimOT && !_skipped) {
+      row.style.display = 'none';
+    }
+
+    row.setAttribute('data-search',(o.name+' '+o.id).toLowerCase());
+    var inpid='otnote_'+o.id;
+    var stag='';
+    if(o.claimOT)stag='<span class="tag ot">OT</span>';
+    else if(o.isNHB)stag='<span class="tag nhb">NHB</span>';
+    else stag='<span class="tag skip">'+esc(o.skipReason||'Skip')+'</span>';
+    if(o.claimOT&&!o.flight&&!o.isCRF&&!o.isKAH)stag+=' <span class="tag nf">No flight!</span>';
+    if(o.isCRF&&o.claimOT)stag+=' <span class="tag crf">CRF</span>';
+    if(o.isKAH&&o.claimOT)stag+=' <span class="tag" style="background:#e0f2fe;color:#3b82f6;border:1px solid #bae6fd">KAH</span>';
+    var ccBadge=o.ccRole?'<span style="font-size:10px;background:var(--bbg);color:var(--blue);border:1px solid var(--bbd);padding:1px 5px;border-radius:6px">'+esc(o.ccRole)+'</span>':'';
+    
+    var defaultNote='';
+    if (o.preservedNote !== undefined) {
+      defaultNote = o.preservedNote;
+    } else {
+      if(o.isKAH) defaultNote='SUPERVISOR DUTY';
+      else if(o.flight) defaultNote=o.flight;
+    }
+
+    row.innerHTML=
+      '<td style="font-size:11px;color:var(--muted);font-family:monospace">'+esc(o.id)+'</td>'+
+      '<td style="font-size:12px" title="'+esc(o.name)+'">'+esc(o.name.length>26?o.name.slice(0,25)+'...':o.name)+'</td>'+
+      '<td>'+stag+'</td>'+
+      '<td style="font-size:11px">'+esc(o.team)+ccBadge+'</td>'+
+      '<td style="font-size:12px;font-weight:600">'+esc(o.flight)+'</td>'+
+      '<td style="font-size:12px">'+esc(o.gate)+'</td>'+
+      '<td style="font-size:12px">'+esc(o.etd)+'</td>'+
+      '<td><input id="'+inpid+'" class="noteinp" value="'+esc(defaultNote)+'" placeholder="Flight/OT Reason"></td>';
+    body.appendChild(row);
+  });
+  document.getElementById('stTotal').textContent=total;
+  document.getElementById('stOT').textContent=ot;
+  document.getElementById('stSkip').textContent=skip;
+  document.getElementById('stWarn').textContent=warn;
+  if(warn>0)showMsg('p3msg',warn+' OT officers have no flight - check holdback paste or add manually.','warn');
+  else showMsg('p3msg','','');
+  
+  var q = document.getElementById('otSearch') ? document.getElementById('otSearch').value : '';
+  if(q) filterOT(q);
+}
+
+function filterOT(q){
+  document.querySelectorAll('#otBody tr').forEach(function(r){
+    var txt=r.getAttribute('data-search')||'';
+    var match=(!q||txt.includes(q.toLowerCase()));
+    var isSkip=r.classList.contains('skiprow');
+    
+    if(isSkip && !_skipped) {
+      r.style.display='none';
+    } else {
+      r.style.display=match?'':'none';
+    }
+  });
+}
+
+function toggleSelectAll(master) {
+  var checkboxes = document.getElementsByClassName('row-checkbox');
+  for (var i = 0; i < checkboxes.length; i++) checkboxes[i].checked = master.checked;
+}
+
+function togSkipped(){
+  _skipped=!_skipped;
+  document.getElementById('togSkipBtn').textContent=_skipped?'Hide skipped':'Show skipped';
+  
+  var q = document.getElementById('otSearch').value;
+  filterOT(q);
+}
+
+function buildHoldbackExportRows(){
+  var rows=[['S/N','ID','NAME','TEAM','OT Reasons']];
+  var sn=1;
+  _otList.forEach(function(o){
+    if(!o.claimOT)return;
+    var noteEl=document.getElementById('otnote_'+o.id);
+    var note=noteEl?noteEl.value:'';
+    if(!note){if(o.isKAH)note='SUPERVISOR DUTY';else note=o.flight||'';}
+    rows.push([sn++,o.id,o.name,o.team||'',note]);
+  });
+  return rows;
+}
+function buildHoldbackPreviewRows(){
+  var exportRows=buildHoldbackExportRows();
+  return exportRows.map(function(row){
+    return Array.isArray(row)?row.slice(1):row;
+  });
+}
+function previewHoldbackXLSX(){
+  var target=document.getElementById('otExcelPreview');
+  if(!target)return;
+  var rows=buildHoldbackPreviewRows();
+  target.innerHTML=''+
+    '<div class="ctitle">Excel table preview <span class="ctag">Extend OT</span></div>'+
+    '<div class="alert warn">This is the exact preview of the Holdback OT table. S/N is hidden in preview. Only claiming OT rows are included.</div>'+
+    buildExcelPreviewFromRows(rows);
+  target.style.display='block';
+  target.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function copyDataToClipboard(rows, successMsg) {
+  if (!rows || rows.length === 0) return;
+  var tsv = rows.map(function(row) {
+    return row.map(function(val) {
+      return String(val ?? '').replace(/\t/g, ' ').replace(/\n/g, ' ');
+    }).join('\t');
+  }).join('\n');
+  navigator.clipboard.writeText(tsv).then(function() {
+    alert(successMsg || "Preview data copied to clipboard! Ready to paste into Excel.");
+  }).catch(function(err) {
+    alert("Clipboard copy failed: " + err);
+  });
+}
+
+function copyHoldbackPreview() {
+  var rows = buildHoldbackPreviewRows();
+  if (rows.length <= 1) { alert("No preview data to copy!"); return; }
+  
+  var dataToCopy = rows.slice(1).map(function(r) {
+    return [r[0], r[1], r[2], '2000HRS', '0800HRS', '0800HRS', '0900HRS', '12', r[3]];
+  });
+  
+  copyDataToClipboard(dataToCopy, "Copied " + dataToCopy.length + " rows to clipboard! (Headers removed, 5 fixed columns added)");
+}
+
+function copyRosterModePreview(mode) {
+  var st = ROSTER_MODE_STATE[mode];
+  if (!st || !st.results.length) return;
+  var rows = rmExportBodyRows(st.results);
+  if (rows.length <= 1) { alert("No preview data to copy!"); return; }
+  
+  var dataToCopy = rows.slice(1);
+  
+  copyDataToClipboard(dataToCopy, "Copied " + dataToCopy.length + " rows of " + st.title + " data to clipboard! (Headers removed)");
+}
+</script>
+</body>
+</html>
