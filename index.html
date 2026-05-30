@@ -166,8 +166,8 @@ table.ot tbody tr.skiprow{opacity:.45}
 <div id="overlay">
   <div class="lb">
     <div class="bspin"></div>
-    <p id="loadtxt">Analysing photo with AI...</p>
-    <div class="lsub">This may take 15-30 seconds</div>
+    <p id="loadtxt">Working...</p>
+    <div class="lsub">This may take a moment</div>
   </div>
 </div>
 <div class="app">
@@ -416,9 +416,7 @@ table.ot tbody tr.skiprow{opacity:.45}
   </aside>
 </div>
 
-
 <script>
-// --- NEW GOOGLE APPS SCRIPT INTEGRATION ---
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyh6yXjZ_lH4dgCEtIwPByDQ0xnRBI3MGGJ2ES9oGVOoGXMzvX-0p_xF1YHTr_IRzYq/exec";
 
 function toggleMasterSource() {
@@ -427,61 +425,65 @@ function toggleMasterSource() {
   document.getElementById('masterFileInput').style.display = (type === 'file') ? 'block' : 'none';
 }
 
-async function loadFromSheet() {
+// ---- SMART AUTO-FETCH LOGIC ----
+async function ensureGoogleSheetData() {
+  if (masterData.rawGAS) return; // Skip if already fetched
+
   var urlInput = document.getElementById('mSheetLink').value.trim();
-  if (!urlInput) { showMsg('p1msg', 'Please paste a Google Sheet link.', 'err'); return; }
+  if (!urlInput) throw new Error('Please paste a Google Sheet link in the Holdback OT tab setup.');
   
   var idMatch = urlInput.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  if (!idMatch || !idMatch[1]) { showMsg('p1msg', 'Invalid Google Sheet link. Ensure it contains /d/ID', 'err'); return; }
+  if (!idMatch || !idMatch[1]) throw new Error('Invalid Google Sheet link. Ensure it contains /d/ID');
   var sheetId = idMatch[1];
   
-  setLoading(true, 'Fetching data from Google Sheets...');
-  try {
-    var response = await fetch(GAS_WEB_APP_URL + '?id=' + sheetId);
-    var data = await response.json();
-    
-    if (data.error) throw new Error(data.error);
-    if (!data.grouping) throw new Error("Missing 'Grouping' tab in sheet.");
-    if (!data.roster || !data.roster.values) throw new Error("Missing 'Roster' tab in sheet.");
-    
-    // Save raw GAS array globally for Confirm Off & PrePlanned OT tabs
-    masterData.rawGAS = data;
-    
-    document.getElementById('mName').textContent = "Loaded from Google Sheets";
-    
-    masterData.grouping = parseGrouping(data.grouping);
-    masterData.roster = parseRoster(data.roster, true);
-    masterData.kah = data.kah ? parseKAH(data.kah) : {};
-    
-    // --- API KEY AUTO-DETECTION ---
-    if (data.api) {
-      var ar = data.api;
-      for (var i = 0; i < ar.length; i++) {
-        for (var j = 0; j < ar[i].length; j++) {
-          var cv = String(ar[i][j]).trim();
-          if (cv.length > 10) {
-            if (cv.startsWith('AIzaSy')) {
-              if (!document.getElementById('apiKey').value) document.getElementById('apiKey').value = cv;
-            } else if (cv.startsWith('sk-or-v1-')) {
-              if (!document.getElementById('apiKey2').value) document.getElementById('apiKey2').value = cv;
-            } else {
-              if (!document.getElementById('apiKey').value) document.getElementById('apiKey').value = cv;
-            }
+  var response = await fetch(GAS_WEB_APP_URL + '?id=' + sheetId);
+  var data = await response.json();
+  
+  if (data.error) throw new Error(data.error);
+  if (!data.grouping) throw new Error("Missing 'Grouping' tab in sheet.");
+  if (!data.roster || !data.roster.values) throw new Error("Missing 'Roster' tab in sheet.");
+  
+  masterData.rawGAS = data;
+  masterData.grouping = parseGrouping(data.grouping);
+  masterData.roster = parseRoster(data.roster, true);
+  masterData.kah = data.kah ? parseKAH(data.kah) : {};
+  
+  if (data.api) {
+    var ar = data.api;
+    for (var i = 0; i < ar.length; i++) {
+      for (var j = 0; j < ar[i].length; j++) {
+        var cv = String(ar[i][j]).trim();
+        if (cv.length > 10) {
+          if (cv.startsWith('AIzaSy')) {
+            if (!document.getElementById('apiKey').value) document.getElementById('apiKey').value = cv;
+          } else if (cv.startsWith('sk-or-v1-')) {
+            if (!document.getElementById('apiKey2').value) document.getElementById('apiKey2').value = cv;
+          } else {
+            if (!document.getElementById('apiKey').value) document.getElementById('apiKey').value = cv;
           }
         }
       }
     }
-    
-    document.getElementById('mz').classList.add('done');
+  }
+  
+  document.getElementById('mz').classList.add('done');
+  document.getElementById('mName').textContent = "Loaded from Google Sheets";
+  chkReady();
+}
+
+async function loadFromSheet() {
+  setLoading(true, 'Fetching data from Google Sheets...');
+  try {
+    masterData.rawGAS = null; // Force refresh if manually clicked
+    await ensureGoogleSheetData();
     showMsg('p1msg', 'Google Sheet parsed successfully!', 'ok');
-    chkReady();
   } catch (ex) {
     showMsg('p1msg', 'Error fetching sheet: ' + ex.message, 'err');
   } finally {
     setLoading(false);
   }
 }
-// ------------------------------------------
+// --------------------------------
 
 function initResizableSplit(){
   var app=document.querySelector('.app');
@@ -620,7 +622,6 @@ function rmValue(c,shared){const t=c.getAttribute('t'); const v=c.getElementsByT
 function rmFill(c,styles){const s=Number(c.getAttribute('s')||0); const fillId=styles.styleFills[s]??0; return styles.fillColors[fillId]||{rgb:'',cls:'none'};}
 function rmFindSheet(sheets, wanted){const uw=rmUpper(wanted).replace(/\s+/g,''); return sheets.find(s=>rmUpper(s.name)===rmUpper(wanted))||sheets.find(s=>rmUpper(s.name).replace(/\s+/g,'')===uw);}
 
-// Analyze natively from the Apps Script fetched JSON Array!
 function gasAnalyseWorkbook(rawGas, mode, sourceSheet) {
    var targetObj = null;
    var sheetName = '';
@@ -634,7 +635,6 @@ function gasAnalyseWorkbook(rawGas, mode, sourceSheet) {
    var rows = targetObj.values;
    var bgs = targetObj.backgrounds;
    
-   // Find header row
    var headerRowIdx = -1;
    var idCol = null, nameCol = null, teamCol = null;
    for(var r=0; r<Math.min(rows.length, 30); r++) {
@@ -658,7 +658,7 @@ function gasAnalyseWorkbook(rawGas, mode, sourceSheet) {
    var sourceIsRoster = (sUpper === 'ROSTER');
    var scanCols = [];
    if (sourceIsRoster) {
-       scanCols = [mode === 'pp' ? 5 : 4]; // Col F is index 5, Col E is index 4
+       scanCols = [mode === 'pp' ? 5 : 4]; 
    } else {
        var start = Math.max(idCol, nameCol, teamCol) + 1;
        for(var c=start; c<rows[headerRowIdx].length; c++) scanCols.push(c);
@@ -681,7 +681,7 @@ function gasAnalyseWorkbook(rawGas, mode, sourceSheet) {
            if(!val) continue;
            
            var hexColor = String(bgs[r][c] || '').toLowerCase();
-           if(hexColor.startsWith('#')) hexColor = hexColor.substring(1); // Standardize to 6 chars
+           if(hexColor.startsWith('#')) hexColor = hexColor.substring(1); 
            
            var fillCls = rmClassify(hexColor);
            
@@ -815,7 +815,6 @@ function rmBuildRosterModeReview(mode,data){
     </div>`;
 }
 
-// Updated wrapper logic for both methods
 async function runRosterModeAnalysis(mode){
   var source = document.getElementById(mode+'Source').value;
   var inputMode = document.getElementById(mode+'InputMode').value; 
@@ -830,8 +829,10 @@ async function runRosterModeAnalysis(mode){
   try{
     var data;
     if(inputMode === 'master') {
-       if(!masterData.rawGAS) throw new Error('No Google Sheet data found. Please click "Fetch Data" in the Holdback OT tab first.');
-       msg.innerHTML='<div class="alert warn">Analysing '+rmEsc(source)+' from fetched Google Sheet...</div>';
+       msg.innerHTML='<div class="alert warn">Fetching and Analysing Google Sheet data...</div>';
+       setLoading(true, 'Fetching Master Google Sheet...');
+       await ensureGoogleSheetData();
+       setLoading(false);
        data = gasAnalyseWorkbook(masterData.rawGAS, mode, source);
     } else {
        var file = document.getElementById(mode+'File').files[0];
@@ -849,6 +850,7 @@ async function runRosterModeAnalysis(mode){
     review.innerHTML=rmBuildRosterModeReview(mode,data);
     review.style.display='block';
   }catch(e){
+    setLoading(false);
     msg.innerHTML='<div class="alert err">'+rmEsc(e.message||e)+'</div>';
   }
 }
@@ -973,7 +975,7 @@ function loadMaster(inp){
       masterData.grouping=parseGrouping(wb.Sheets[gName]);
       masterData.roster=parseRoster(wb.Sheets[rName]);
       masterData.kah=kName?parseKAH(wb.Sheets[kName]):{};
-      masterData.rawGAS=null; // Reset GAS tracking if manual upload
+      masterData.rawGAS=null; 
       if(aName){
         var ar=XLSX.utils.sheet_to_json(wb.Sheets[aName],{header:1,defval:''});
         for(var i=0;i<ar.length;i++)for(var j=0;j<ar[i].length;j++){var cv=String(ar[i][j]).trim();if(cv.length>10){
@@ -1274,7 +1276,6 @@ async function runAnalysis(){
   var finalResult = null;
   var errLog = [];
 
-  // --- ATTEMPT 1: Google Gemini ---
   if(geminiKey) {
       try {
           setLoading(true, 'Requesting Google Gemini...');
@@ -1286,7 +1287,6 @@ async function runAnalysis(){
       errLog.push("Gemini skipped (No Key provided).");
   }
 
-  // --- ATTEMPT 2: OpenRouter Fallback ---
   if(!finalResult && orKey) {
       try {
           setLoading(true, 'Gemini failed/congested. Switching to OpenRouter (' + orModel + ')...');
@@ -1296,7 +1296,6 @@ async function runAnalysis(){
       }
   }
 
-  // --- HANDLE FAILURE ---
   if(!finalResult) {
       setLoading(false);
       document.getElementById('aSpin').style.display='none';
@@ -1305,7 +1304,6 @@ async function runAnalysis(){
       return;
   }
 
-  // --- HANDLE SUCCESS & PARSE JSON ---
   try{
     showMsg('p1msg','AI success using ' + finalResult.provider + ' (' + finalResult.model + ').','ok');
     
@@ -1416,7 +1414,6 @@ function buildOT(){
   var kahMap=masterData.kah||{};
   var manualData=parseManualText(document.getElementById('manualText').value);
 
-  // --- SMART PRESERVE MANUAL NOTES MEMORY CACHE ---
   var preservedNotes = {};
   _otList.forEach(function(o){
     var el = document.getElementById('otnote_' + o.id);
@@ -1430,7 +1427,6 @@ function buildOT(){
       }
     }
   });
-  // ------------------------------------------------
 
   var bestPerCS={};
   var ccBest={A:null,B:null,C:null};
