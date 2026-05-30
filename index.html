@@ -235,6 +235,7 @@ table.ot tbody tr.skiprow{opacity:.45}
           </div>
           <div class="uzf" id="mName" style="text-align:center;"></div>
         </div>
+
         <label class="uz" id="pz">
           <input type="file" id="pFile" accept="image/*" onchange="loadPhoto(this)">
           <div class="uzi">&#x1F4F8;</div><div class="uzl">Flight screenshot</div>
@@ -335,8 +336,14 @@ table.ot tbody tr.skiprow{opacity:.45}
           </select>
         </div>
         <div>
-          <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Excel file</label>
-          <input type="file" id="coFile" accept=".xlsx,.xls" class="noteinp">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Input Method</label>
+          <select id="coInputMode" class="noteinp" onchange="document.getElementById('coFileWrap').style.display=this.value==='file'?'block':'none'">
+            <option value="master" selected>Use Master Google Sheet</option>
+            <option value="file">Upload Excel file</option>
+          </select>
+          <div id="coFileWrap" style="display:none; margin-top:6px;">
+            <input type="file" id="coFile" accept=".xlsx,.xls" class="noteinp">
+          </div>
         </div>
       </div>
       <div class="alert warn">Priority set to <b>Roster</b>. For Roster source, Confirm Off OT checks <b>column E only</b>. For Confirm Off OT source, it checks all roster/date columns after ID, Name and Team.</div>
@@ -363,8 +370,14 @@ table.ot tbody tr.skiprow{opacity:.45}
           </select>
         </div>
         <div>
-          <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Excel file</label>
-          <input type="file" id="ppFile" accept=".xlsx,.xls" class="noteinp">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Input Method</label>
+          <select id="ppInputMode" class="noteinp" onchange="document.getElementById('ppFileWrap').style.display=this.value==='file'?'block':'none'">
+            <option value="master" selected>Use Master Google Sheet</option>
+            <option value="file">Upload Excel file</option>
+          </select>
+          <div id="ppFileWrap" style="display:none; margin-top:6px;">
+            <input type="file" id="ppFile" accept=".xlsx,.xls" class="noteinp">
+          </div>
         </div>
       </div>
       <div class="alert warn">Priority set to <b>Roster</b>. For Roster source, PrePlanned OT checks <b>column F only</b>. For PrePlanned OT source, it checks all roster/date columns after ID, Name and Team.</div>
@@ -431,6 +444,9 @@ async function loadFromSheet() {
     if (!data.grouping) throw new Error("Missing 'Grouping' tab in sheet.");
     if (!data.roster || !data.roster.values) throw new Error("Missing 'Roster' tab in sheet.");
     
+    // Save raw GAS array globally for Confirm Off & PrePlanned OT tabs
+    masterData.rawGAS = data;
+    
     document.getElementById('mName').textContent = "Loaded from Google Sheets";
     
     masterData.grouping = parseGrouping(data.grouping);
@@ -455,7 +471,6 @@ async function loadFromSheet() {
         }
       }
     }
-    // ------------------------------
     
     document.getElementById('mz').classList.add('done');
     showMsg('p1msg', 'Google Sheet parsed successfully!', 'ok');
@@ -575,6 +590,7 @@ const RM_INDEXED_COLORS=['000000','FFFFFF','FF0000','00FF00','0000FF','FFFF00','
 function rmRosterVal(v){return String(v??'').trim().toUpperCase().replace(/\.0+$/,'');}
 function rmThemeRgb(theme,tint){const base=['FFFFFF','000000','EEECE1','1F497D','4F81BD','C0504D','9BBB59','8064A2','4BACC6','F79646'][Number(theme)]||''; if(!base)return ''; let r=parseInt(base.slice(0,2),16),g=parseInt(base.slice(2,4),16),b=parseInt(base.slice(4,6),16),t=Number(tint||0); const adj=x=>Math.round(t<0?x*(1+t):x+(255-x)*t); if(t){r=adj(r);g=adj(g);b=adj(b);} return [r,g,b].map(x=>Math.max(0,Math.min(255,x)).toString(16).padStart(2,'0')).join('').toUpperCase();}
 function rmColorFromEl(el){if(!el)return ''; let rgb=el.getAttribute('rgb')||''; if(rgb){rgb=rgb.toUpperCase(); if(rgb.length===8)rgb=rgb.slice(2); return rgb;} const indexed=el.getAttribute('indexed'); if(indexed!==null)return RM_INDEXED_COLORS[Number(indexed)]||''; const theme=el.getAttribute('theme'); if(theme!==null)return rmThemeRgb(theme, el.getAttribute('tint')); return '';}
+
 function rmClassify(rgb){
   if(!rgb||rgb.length<6)return 'none';
   const r=parseInt(rgb.slice(0,2),16), g=parseInt(rgb.slice(2,4),16), b=parseInt(rgb.slice(4,6),16);
@@ -582,6 +598,7 @@ function rmClassify(rgb){
   if(b>=145 && g>=110 && b>=r+8 && g>=r-25 && !(r>225&&g>225&&b>225))return 'blue';
   return 'other';
 }
+
 function rmStyles(stylesXml){
   const doc=rmXmlParse(stylesXml);
   const fillsNode=rmByTag(doc.documentElement,'fills')[0];
@@ -602,6 +619,110 @@ function rmStyles(stylesXml){
 function rmValue(c,shared){const t=c.getAttribute('t'); const v=c.getElementsByTagNameNS(XNS,'v')[0]; if(t==='s')return shared[Number(v?.textContent||0)]||''; if(t==='inlineStr')return Array.from(c.getElementsByTagNameNS(XNS,'t')).map(x=>x.textContent||'').join(''); return v?v.textContent:'';}
 function rmFill(c,styles){const s=Number(c.getAttribute('s')||0); const fillId=styles.styleFills[s]??0; return styles.fillColors[fillId]||{rgb:'',cls:'none'};}
 function rmFindSheet(sheets, wanted){const uw=rmUpper(wanted).replace(/\s+/g,''); return sheets.find(s=>rmUpper(s.name)===rmUpper(wanted))||sheets.find(s=>rmUpper(s.name).replace(/\s+/g,'')===uw);}
+
+// Analyze natively from the Apps Script fetched JSON Array!
+function gasAnalyseWorkbook(rawGas, mode, sourceSheet) {
+   var targetObj = null;
+   var sheetName = '';
+   var sUpper = sourceSheet.toUpperCase();
+   if(sUpper === 'ROSTER') { targetObj = rawGas.roster; sheetName = 'Roster'; }
+   else if(sUpper === 'CONFIRM OFF OT') { targetObj = rawGas.co; sheetName = 'Confirm Off OT'; }
+   else if(sUpper === 'PREPLANNED OT') { targetObj = rawGas.pp; sheetName = 'PrePlanned OT'; }
+   
+   if(!targetObj || !targetObj.values) throw new Error('Tab "' + sourceSheet + '" not found in Google Sheet. Make sure you fetch it first.');
+   
+   var rows = targetObj.values;
+   var bgs = targetObj.backgrounds;
+   
+   // Find header row
+   var headerRowIdx = -1;
+   var idCol = null, nameCol = null, teamCol = null;
+   for(var r=0; r<Math.min(rows.length, 30); r++) {
+       var found = {};
+       for(var c=0; c<Math.min(rows[r].length, 25); c++) {
+           var v = String(rows[r][c] || '').trim().toUpperCase();
+           if(v==='ID' || v==='SERVICE ID') found.id = c;
+           if(v==='NAME' || v==='OFFICER' || v==='OFFICER NAME') found.name = c;
+           if(v==='TEAM') found.team = c;
+       }
+       if(found.id !== undefined && found.name !== undefined && found.team !== undefined) {
+           headerRowIdx = r;
+           idCol = found.id;
+           nameCol = found.name;
+           teamCol = found.team;
+           break;
+       }
+   }
+   if(headerRowIdx === -1) throw new Error('Cannot identify header row with ID, Name and Team.');
+   
+   var sourceIsRoster = (sUpper === 'ROSTER');
+   var scanCols = [];
+   if (sourceIsRoster) {
+       scanCols = [mode === 'pp' ? 5 : 4]; // Col F is index 5, Col E is index 4
+   } else {
+       var start = Math.max(idCol, nameCol, teamCol) + 1;
+       for(var c=start; c<rows[headerRowIdx].length; c++) scanCols.push(c);
+   }
+   
+   var out = [];
+   var uniqueBlueFills = new Set();
+   var uniqueGreenFills = new Set();
+
+   for(var r = headerRowIdx + 1; r < rows.length; r++) {
+       var id = rmNorm(rows[r][idCol]);
+       var name = rmCleanName(rows[r][nameCol]);
+       var team = rmNorm(rows[r][teamCol]);
+       if(!id && !name && !team) continue;
+       
+       for(var sc=0; sc<scanCols.length; sc++) {
+           var c = scanCols[sc];
+           var rawVal = rows[r][c];
+           var val = rmRosterVal(rawVal);
+           if(!val) continue;
+           
+           var hexColor = String(bgs[r][c] || '').toLowerCase();
+           if(hexColor.startsWith('#')) hexColor = hexColor.substring(1); // Standardize to 6 chars
+           
+           var fillCls = rmClassify(hexColor);
+           
+           var matchType = '';
+           if(val === '2' && fillCls === 'blue') matchType = 'Rostered 2 in blue';
+           if(val === 'OT2' && fillCls === 'green') matchType = 'Rostered OT2 in green';
+           
+           if(matchType) {
+               if(fillCls==='blue') uniqueBlueFills.add(hexColor);
+               if(fillCls==='green') uniqueGreenFills.add(hexColor);
+               
+               var headerVal = rows[headerRowIdx][c];
+               var rDate = '';
+               if (Object.prototype.toString.call(headerVal) === '[object Date]') {
+                   rDate = headerVal.toISOString().slice(0,10);
+               } else {
+                   rDate = String(headerVal);
+               }
+               
+               out.push({
+                   id: id, name: name, team: team, rosterDate: rDate,
+                   cell: rmNumToCol(c + 1) + (r + 1), value: rawVal, detectedColor: fillCls,
+                   fillRgb: hexColor, matchType: matchType
+               });
+           }
+       }
+   }
+   
+   return {
+       results: out,
+       info: {
+           fileName: 'Loaded from Google Sheets',
+           sheetName: sheetName,
+           headerRow: headerRowIdx + 1,
+           scan: sourceIsRoster ? (mode === 'pp' ? 'Column F' : 'Column E') : 'All roster columns after Team',
+           blueFills: Array.from(uniqueBlueFills),
+           greenFills: Array.from(uniqueGreenFills)
+       }
+   };
+}
+
 async function rmAnalyseWorkbook(file, mode, sourceSheet){
   if(!window.JSZip) throw new Error('JSZip library not loaded. Please check internet/CDN access and reload.');
   const buf=await file.arrayBuffer(); const zip=await JSZip.loadAsync(buf);
@@ -627,6 +748,7 @@ async function rmAnalyseWorkbook(file, mode, sourceSheet){
   }
   return {results:out, info:{fileName:file.name,sheetName:sheet.name,headerRow,scan:sourceIsRoster?(mode==='pp'?'Column F':'Column E'):'All roster columns after Team', blueFills:styles.fillColors.filter(f=>f.cls==='blue').map(f=>f.rgb).filter(Boolean), greenFills:styles.fillColors.filter(f=>f.cls==='green').map(f=>f.rgb).filter(Boolean)}};
 }
+
 function rmUniqueExportRows(rows){
   const seen=new Set();
   const out=[];
@@ -692,24 +814,45 @@ function rmBuildRosterModeReview(mode,data){
       </table>
     </div>`;
 }
+
+// Updated wrapper logic for both methods
 async function runRosterModeAnalysis(mode){
-  const file=$(mode+'File').files[0], source=$(mode+'Source').value, msg=$(mode+'Msg'), review=$(mode+'Review'), previewBtn=$(mode+'PreviewBtn'), preview=$(mode+'ExcelPreview');
+  var source = document.getElementById(mode+'Source').value;
+  var inputMode = document.getElementById(mode+'InputMode').value; 
+  var msg = document.getElementById(mode+'Msg');
+  var review = document.getElementById(mode+'Review');
+  var previewBtn = document.getElementById(mode+'PreviewBtn');
+  var preview = document.getElementById(mode+'ExcelPreview');
+  
   msg.innerHTML=''; review.style.display='none'; if(previewBtn)previewBtn.disabled=true; if(preview){preview.innerHTML=''; preview.style.display='none';}
   ROSTER_MODE_STATE[mode].results=[];
-  if(!file){msg.innerHTML='<div class="alert err">Please choose Excel file first.</div>'; return;}
+  
   try{
-    msg.innerHTML='<div class="alert warn">Analysing '+rmEsc(source)+'...</div>';
-    const data=await rmAnalyseWorkbook(file, mode, source);
+    var data;
+    if(inputMode === 'master') {
+       if(!masterData.rawGAS) throw new Error('No Google Sheet data found. Please click "Fetch Data" in the Holdback OT tab first.');
+       msg.innerHTML='<div class="alert warn">Analysing '+rmEsc(source)+' from fetched Google Sheet...</div>';
+       data = gasAnalyseWorkbook(masterData.rawGAS, mode, source);
+    } else {
+       var file = document.getElementById(mode+'File').files[0];
+       if(!file) throw new Error('Please choose an Excel file first.');
+       msg.innerHTML='<div class="alert warn">Analysing '+rmEsc(source)+'...</div>';
+       data = await rmAnalyseWorkbook(file, mode, source);
+    }
+    
     ROSTER_MODE_STATE[mode].results=data.results;
     ROSTER_MODE_STATE[mode].info=data.info;
     const exportRows=rmUniqueExportRows(data.results);
     if(previewBtn)previewBtn.disabled=exportRows.length===0;
-    var copyBtn=$(mode+'CopyBtn'); if(copyBtn)copyBtn.disabled=exportRows.length===0;
+    var copyBtn=document.getElementById(mode+'CopyBtn'); if(copyBtn)copyBtn.disabled=exportRows.length===0;
     msg.innerHTML='<div class="alert ok">Done. '+data.results.length+' matches found. Preview table has '+exportRows.length+' unique officer row(s). Click Preview Excel table at bottom to check before copying.</div>';
     review.innerHTML=rmBuildRosterModeReview(mode,data);
     review.style.display='block';
-  }catch(e){msg.innerHTML='<div class="alert err">'+rmEsc(e.message||e)+'</div>';}
+  }catch(e){
+    msg.innerHTML='<div class="alert err">'+rmEsc(e.message||e)+'</div>';
+  }
 }
+
 function previewRosterModeXlsx(mode){
   const st=ROSTER_MODE_STATE[mode];
   const target=$(mode+'ExcelPreview');
@@ -734,7 +877,7 @@ function switchTool(mode){
   document.getElementById('modePPBtn').classList.toggle('active',isPP);
   document.getElementById('modeCOBtn').classList.toggle('active',isCO);
 }
-var masterData={grouping:null,roster:[],kah:{}};
+var masterData={grouping:null,roster:[],kah:{},rawGAS:null};
 var photoB64='',photoMime='image/png';
 var flightRows=[],_otList=[],_skipped=false,_frid=0;
 
@@ -830,6 +973,7 @@ function loadMaster(inp){
       masterData.grouping=parseGrouping(wb.Sheets[gName]);
       masterData.roster=parseRoster(wb.Sheets[rName]);
       masterData.kah=kName?parseKAH(wb.Sheets[kName]):{};
+      masterData.rawGAS=null; // Reset GAS tracking if manual upload
       if(aName){
         var ar=XLSX.utils.sheet_to_json(wb.Sheets[aName],{header:1,defval:''});
         for(var i=0;i<ar.length;i++)for(var j=0;j<ar[i].length;j++){var cv=String(ar[i][j]).trim();if(cv.length>10){
@@ -1165,7 +1309,6 @@ async function runAnalysis(){
   try{
     showMsg('p1msg','AI success using ' + finalResult.provider + ' (' + finalResult.model + ').','ok');
     
-    // Extra strong JSON extraction (Handles markdown wrappers from Open Source models)
     var clean = finalResult.text;
     var startIdx = clean.indexOf('[');
     var endIdx = clean.lastIndexOf(']');
