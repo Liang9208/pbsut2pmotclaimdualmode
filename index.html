@@ -437,6 +437,26 @@ async function loadFromSheet() {
     masterData.roster = parseRoster(data.roster, true);
     masterData.kah = data.kah ? parseKAH(data.kah) : {};
     
+    // --- API KEY AUTO-DETECTION ---
+    if (data.api) {
+      var ar = data.api;
+      for (var i = 0; i < ar.length; i++) {
+        for (var j = 0; j < ar[i].length; j++) {
+          var cv = String(ar[i][j]).trim();
+          if (cv.length > 10) {
+            if (cv.startsWith('AIzaSy')) {
+              if (!document.getElementById('apiKey').value) document.getElementById('apiKey').value = cv;
+            } else if (cv.startsWith('sk-or-v1-')) {
+              if (!document.getElementById('apiKey2').value) document.getElementById('apiKey2').value = cv;
+            } else {
+              if (!document.getElementById('apiKey').value) document.getElementById('apiKey').value = cv;
+            }
+          }
+        }
+      }
+    }
+    // ------------------------------
+    
     document.getElementById('mz').classList.add('done');
     showMsg('p1msg', 'Google Sheet parsed successfully!', 'ok');
     chkReady();
