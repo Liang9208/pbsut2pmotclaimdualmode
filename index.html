@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,32 +19,8 @@
 --r:10px;--rs:6px;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
-.app{max-width:1600px;margin:0 auto;padding:24px 16px 60px;display:flex;gap:0;align-items:flex-start}
-.main-left{width:60%;min-width:360px;padding-right:8px}
-.sharepoint-right{width:40%;min-width:360px;position:sticky;top:16px;align-self:flex-start;padding-left:8px}
-.splitter{width:12px;align-self:stretch;min-height:calc(100vh - 48px);cursor:col-resize;position:relative;flex:0 0 12px}
-.splitter::before{content:'';position:sticky;top:16px;display:block;width:4px;height:calc(100vh - 96px);min-height:520px;margin:0 auto;border-radius:999px;background:var(--border);transition:background .15s}
-.splitter:hover::before,.splitter.dragging::before{background:var(--blue)}
-.splitter::after{content:'⋮';position:sticky;top:45vh;display:flex;align-items:center;justify-content:center;width:18px;height:42px;margin-left:-3px;margin-top:-42px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--muted);font-weight:700;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-body.resizing{cursor:col-resize;user-select:none}
-body.resizing .sharepoint-frame{pointer-events:none}
-.sharepoint-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px}
-.sharepoint-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.sharepoint-title{font-size:14px;font-weight:700;flex:0 0 auto}
-.sharepoint-actions{display:flex;align-items:center;justify-content:space-between;gap:6px;flex:1 1 auto;min-width:220px}
-.sharepoint-link,.sharepoint-toggle{font-size:12px;color:var(--blue);text-decoration:none;border:1px solid var(--bbd);background:var(--bbg);padding:4px 8px;border-radius:var(--rs);white-space:nowrap;font-family:inherit;cursor:pointer}
-.sharepoint-toggle:hover,.sharepoint-link:hover{opacity:.85}
-.sharepoint-frame{width:100%;height:calc(100vh - 96px);min-height:720px;border:1px solid var(--border);border-radius:var(--rs);background:#fff}
-.app.sp-collapsed .main-left{width:calc(100% - 250px)!important;max-width:none}
-.app.sp-collapsed .splitter{display:none}
-.app.sp-collapsed .sharepoint-right{width:250px!important;min-width:250px;padding-left:8px;position:sticky;top:16px}
-.app.sp-collapsed .sharepoint-card{padding:10px 12px;position:sticky;top:16px;overflow:visible;cursor:pointer}
-.app.sp-collapsed .sharepoint-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0;flex-wrap:nowrap}
-.app.sp-collapsed .sharepoint-title{writing-mode:horizontal-tb!important;transform:none!important;margin:0;font-size:12px;white-space:nowrap;line-height:1.2;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis}
-.app.sp-collapsed .sharepoint-actions{display:flex;align-items:center;justify-content:flex-end;width:auto;gap:0;flex:0 0 auto;min-width:auto;flex-wrap:nowrap}
-.app.sp-collapsed .sharepoint-link,.app.sp-collapsed .sharepoint-frame,.app.sp-collapsed .apihint{display:none!important}
-.app.sp-collapsed .sharepoint-toggle{display:inline-flex!important;align-items:center;justify-content:center;padding:4px 10px;width:auto;min-width:64px;max-width:none;font-size:12px;position:relative;z-index:5}
-@media(max-width:900px){.app{display:block}.main-left,.sharepoint-right{width:100%!important;min-width:0;padding:0}.splitter{display:none}.sharepoint-right{position:static;margin-top:16px}.sharepoint-frame{height:650px;min-height:650px}.app.sp-collapsed .sharepoint-right{width:100%!important}.app.sp-collapsed .sharepoint-card{padding:12px}.app.sp-collapsed .sharepoint-head{display:flex;text-align:left}.app.sp-collapsed .sharepoint-title{writing-mode:initial;transform:none;margin:0;font-size:14px}.app.sp-collapsed .sharepoint-link,.app.sp-collapsed .sharepoint-frame,.app.sp-collapsed .apihint{display:none}.app.sp-collapsed .sharepoint-toggle{width:auto}}
+.app{max-width:1200px;margin:0 auto;padding:24px 16px 60px;}
+.main-left{width:100%;}
 h1{font-size:20px;font-weight:700;letter-spacing:-.3px;margin-bottom:3px}
 .sub{font-size:13px;color:var(--muted);margin-bottom:18px}
 .steps{display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;flex-wrap:wrap}
@@ -159,7 +136,6 @@ table.ot tbody tr.skiprow{opacity:.45}
 .excel-preview .xl-id{width:14ch}
 .excel-preview .xl-name{width:34ch}
 .excel-preview .xl-team{width:14ch}
-
 </style>
 </head>
 <body>
@@ -173,7 +149,7 @@ table.ot tbody tr.skiprow{opacity:.45}
 <div class="app">
   <div class="main-left">
   <h1>PBSU T2 OT Claim</h1>
-  <p class="sub">Upload master excel &amp; flight photo. Dual-API failover enabled (Gemini + OpenRouter).</p>
+  <p class="sub">Upload master excel &amp; flight photo. Failover enabled (Gemini + OpenRouter).</p>
   <div class="modebar">
     <button type="button" class="modebtn active" id="modeOTBtn" onclick="switchTool('ot')">Holdback OT</button>
     <button type="button" class="modebtn" id="modeCOBtn" onclick="switchTool('co')">Confirm Off OT</button>
@@ -204,9 +180,9 @@ table.ot tbody tr.skiprow{opacity:.45}
             <option value="gemini-1.5-pro-latest">Primary: Gemini 1.5 Pro</option>
           </select>
           <select id="modelFallback" onchange="chkReady()">
-            <option value="meta-llama/llama-3.2-11b-vision-instruct:free" selected>Fallback: Llama 3.2 Vision (Free)</option>
-            <option value="qwen/qwen-2-vl-72b-instruct">Fallback: Qwen 2 VL 72B</option>
-            <option value="google/gemini-2.0-flash-exp:free">Fallback: Gemini 2.0 (OpenRouter Free)</option>
+            <option value="google/gemini-2.0-flash-lite-preview-02-05" selected>Fallback: Gemini 2.0 Flash Lite (Ultra-Stable)</option>
+            <option value="qwen/qwen-2.5-vl-72b-instruct">Fallback: Qwen 2.5 VL 72B (Stable Node)</option>
+            <option value="meta-llama/llama-3.2-11b-vision-instruct">Fallback: Llama 3.2 Vision (Stable Node)</option>
           </select>
         </div>
         <div class="apihint">Provide both keys for automatic failover. If Gemini fails or gets congested, OpenRouter takes over seamlessly.</div>
@@ -224,6 +200,7 @@ table.ot tbody tr.skiprow{opacity:.45}
           
           <div id="masterSheetInput">
             <input type="text" id="mSheetLink" class="noteinp" placeholder="Paste Google Sheet Link here..." value="https://docs.google.com/spreadsheets/d/130I3vxhiPd54QgTnA52ryBQr0k1dVARugrJEjnxIWpc/edit?gid=1483239688#gid=1483239688" style="margin-bottom:6px;">
+            <button type="button" class="btn" style="width:100%; justify-content:center; padding:4px; margin-bottom:6px; font-weight:600; color:var(--blue); border-color:var(--bbd); background:var(--bbg);" onclick="var url=document.getElementById('mSheetLink').value.trim(); if(url){ window.open(url, '_blank'); }else{ alert('Please paste a Google Sheet link first!'); }">🔗 Open in New Tab</button>
             <button type="button" class="btn preview" style="width:100%; justify-content:center; padding:4px;" onclick="loadFromSheet()">Fetch Data</button>
           </div>
           
@@ -393,31 +370,16 @@ table.ot tbody tr.skiprow{opacity:.45}
   </div>
 
   </div>
-
-  <div class="splitter" id="splitter" title="Drag to resize"></div>
-
-  <aside class="sharepoint-right" id="sharepointRight">
-    <div class="sharepoint-card" id="sharepointCard">
-      <div class="sharepoint-head">
-        <div class="sharepoint-title">SharePoint Roster</div>
-        <div class="sharepoint-actions">
-          <a class="sharepoint-link" href="https://certiscisco.sharepoint.com/sites/CASCSSU/_layouts/15/Doc.aspx?sourcedoc={c52400bc-052c-47fd-94bb-69f9044c4d09}&action=embedview&wdInConfigurator=True&wdInConfigurator=True&edaebf=rslc0" target="_blank" rel="noopener">Open in new tab</a>
-          <button type="button" class="sharepoint-toggle" id="sharepointToggle" onclick="event.stopPropagation();toggleSharePoint()">Collapse</button>
-        </div>
-      </div>
-      <iframe
-        class="sharepoint-frame"
-        frameborder="0"
-        scrolling="no"
-        src="https://certiscisco.sharepoint.com/sites/CASCSSU/_layouts/15/Doc.aspx?sourcedoc={c52400bc-052c-47fd-94bb-69f9044c4d09}&action=embedview&wdInConfigurator=True&wdInConfigurator=True&edaebf=rslc0">
-      </iframe>
-      <div class="apihint" style="margin-top:8px">If SharePoint shows refused to connect, use Open in new tab. That is controlled by company SharePoint/IT policy.</div>
-    </div>
-  </aside>
 </div>
 
 <script>
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyh6yXjZ_lH4dgCEtIwPByDQ0xnRBI3MGGJ2ES9oGVOoGXMzvX-0p_xF1YHTr_IRzYq/exec";
+var masterData={grouping:null,roster:[],kah:{},rawGAS:null};
+var photoB64='',photoMime='image/png';
+var flightRows=[],_otList=[],_skipped=false,_frid=0;
+const ROSTER_MODE_STATE = { pp:{results:[], title:'PrePlanned OT'}, co:{results:[], title:'Confirm Off OT'} };
+const XNS='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+const XRNS='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
 function toggleMasterSource() {
   var type = document.getElementById('masterSourceType').value;
@@ -425,9 +387,8 @@ function toggleMasterSource() {
   document.getElementById('masterFileInput').style.display = (type === 'file') ? 'block' : 'none';
 }
 
-// ---- SMART AUTO-FETCH LOGIC ----
 async function ensureGoogleSheetData() {
-  if (masterData.rawGAS) return; // Skip if already fetched
+  if (masterData.rawGAS) return; 
 
   var urlInput = document.getElementById('mSheetLink').value.trim();
   if (!urlInput) throw new Error('Please paste a Google Sheet link in the Holdback OT tab setup.');
@@ -474,7 +435,7 @@ async function ensureGoogleSheetData() {
 async function loadFromSheet() {
   setLoading(true, 'Fetching data from Google Sheets...');
   try {
-    masterData.rawGAS = null; // Force refresh if manually clicked
+    masterData.rawGAS = null; 
     await ensureGoogleSheetData();
     showMsg('p1msg', 'Google Sheet parsed successfully!', 'ok');
   } catch (ex) {
@@ -483,97 +444,8 @@ async function loadFromSheet() {
     setLoading(false);
   }
 }
-// --------------------------------
-
-function initResizableSplit(){
-  var app=document.querySelector('.app');
-  var left=document.querySelector('.main-left');
-  var right=document.getElementById('sharepointRight');
-  var splitter=document.getElementById('splitter');
-  if(!app||!left||!right||!splitter)return;
-
-  var saved=localStorage.getItem('pbsuSplitLeftPct');
-  if(saved){
-    var pct=Math.max(28,Math.min(72,parseFloat(saved)||45));
-    left.style.width=pct+'%';
-    right.style.width=(100-pct)+'%';
-  }
-
-  splitter.addEventListener('mousedown',startDrag);
-  splitter.addEventListener('touchstart',startDrag,{passive:false});
-
-  function getClientX(e){return e.touches&&e.touches.length?e.touches[0].clientX:e.clientX;}
-  function startDrag(e){
-    if(window.innerWidth<=900)return;
-    e.preventDefault();
-    splitter.classList.add('dragging');
-    document.body.classList.add('resizing');
-    document.addEventListener('mousemove',onDrag);
-    document.addEventListener('mouseup',stopDrag);
-    document.addEventListener('touchmove',onDrag,{passive:false});
-    document.addEventListener('touchend',stopDrag);
-  }
-  function onDrag(e){
-    if(e.cancelable)e.preventDefault();
-    var rect=app.getBoundingClientRect();
-    var x=getClientX(e)-rect.left;
-    var pct=(x/rect.width)*100;
-    pct=Math.max(28,Math.min(72,pct));
-    left.style.width=pct+'%';
-    right.style.width=(100-pct)+'%';
-    localStorage.setItem('pbsuSplitLeftPct',pct.toFixed(1));
-  }
-  function stopDrag(){
-    splitter.classList.remove('dragging');
-    document.body.classList.remove('resizing');
-    document.removeEventListener('mousemove',onDrag);
-    document.removeEventListener('mouseup',stopDrag);
-    document.removeEventListener('touchmove',onDrag);
-    document.removeEventListener('touchend',stopDrag);
-  }
-}
-
-function toggleSharePoint(){
-  var app=document.querySelector('.app');
-  var btn=document.getElementById('sharepointToggle');
-  if(!app||!btn)return;
-  var collapsed=!app.classList.contains('sp-collapsed');
-  app.classList.toggle('sp-collapsed',collapsed);
-  btn.textContent=collapsed?'Expand':'Collapse';
-  btn.title=collapsed?'Expand SharePoint panel':'Collapse SharePoint panel';
-  localStorage.setItem('pbsuSharePointCollapsed',collapsed?'1':'0');
-}
-
-function restoreSharePointPanel(){
-  var app=document.querySelector('.app');
-  var btn=document.getElementById('sharepointToggle');
-  if(!app||!btn)return;
-  var collapsed=localStorage.getItem('pbsuSharePointCollapsed')==='1';
-  app.classList.toggle('sp-collapsed',collapsed);
-  btn.textContent=collapsed?'Expand':'Collapse';
-  btn.title=collapsed?'Expand SharePoint panel':'Collapse SharePoint panel';
-}
-
-document.addEventListener('DOMContentLoaded',function(){
-  restoreSharePointPanel();
-  initResizableSplit();
-
-  var card=document.getElementById('sharepointCard');
-  var app=document.querySelector('.app');
-  if(card&&app){
-    card.addEventListener('click',function(e){
-      if(app.classList.contains('sp-collapsed')){
-        e.preventDefault();
-        toggleSharePoint();
-      }
-    });
-  }
-});
 
 function $(id){return document.getElementById(id);}
-const ROSTER_MODE_STATE = { pp:{results:[], title:'PrePlanned OT'}, co:{results:[], title:'Confirm Off OT'} };
-const XNS='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
-const XRNS='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 function rmUpper(v){return String(v??'').trim().toUpperCase();}
 function rmNorm(v){return String(v??'').trim();}
 function rmCleanName(v){return rmNorm(v).replace(/\s*\((?:X|NX)\)\s*$/i,'').replace(/\s+/g,' ').trim();}
@@ -610,7 +482,7 @@ function rmStyles(stylesXml){
     const ptype=pattern?pattern.getAttribute('patternType'):'';
     if(ptype && ptype!=='solid')return {rgb:'',cls:'none'};
     const fg=fill.getElementsByTagNameNS(XNS,'fgColor')[0]||fill.getElementsByTagNameNS(XNS,'bgColor')[0];
-    const rgb=rmColorFromEl(fg);
+    const rgb=rmColorFromEl(hexColor);
     return {rgb,cls:rmClassify(rgb)};
   });
   const cellXfsNode=rmByTag(doc.documentElement,'cellXfs')[0];
@@ -793,9 +665,9 @@ function buildExcelPreviewFromRows(bodyRows){
 function rmBuildExcelLikePreview(rows){
   return buildExcelPreviewFromRows(rmExportBodyRows(rows));
 }
+
 function rmBuildRosterModeReview(mode,data){
   const st=ROSTER_MODE_STATE[mode];
-  const exportRows=rmUniqueExportRows(data.results);
   const detailRows=data.results.map(r=>`<tr><td>${rmEsc(r.matchType)}</td><td>${rmEsc(r.id)}</td><td>${rmEsc(r.name)}</td><td>${rmEsc(r.team)}</td><td>${rmEsc(r.rosterDate)}</td><td>${rmEsc(r.cell)}</td><td>${rmEsc(r.value)}</td><td><span class="cstag" style="background:#${rmEsc(r.fillRgb||'fff')}">${rmEsc(r.detectedColor)} ${rmEsc(r.fillRgb)}</span></td></tr>`).join('');
   return `
     <div class="alert ok">
@@ -810,7 +682,7 @@ function rmBuildRosterModeReview(mode,data){
     <div class="twrap">
       <table class="ot">
         <thead><tr><th>Rule</th><th>ID</th><th>Name</th><th>Team</th><th>Roster/Header</th><th>Cell</th><th>Value</th><th>Fill</th></tr></thead>
-        <tbody>${detailRows||'<tr><td colspan="4">No matches found.</td></tr>'}</tbody>
+        <tbody>${detailRows||'<tr><td colspan="8">No matches found.</td></tr>'}</tbody>
       </table>
     </div>`;
 }
@@ -868,6 +740,7 @@ function previewRosterModeXlsx(mode){
   target.style.display='block';
   target.scrollIntoView({behavior:'smooth',block:'start'});
 }
+
 function switchTool(mode){
   var isOT=mode==='ot';
   var isPP=mode==='pp';
@@ -879,9 +752,6 @@ function switchTool(mode){
   document.getElementById('modePPBtn').classList.toggle('active',isPP);
   document.getElementById('modeCOBtn').classList.toggle('active',isCO);
 }
-var masterData={grouping:null,roster:[],kah:{},rawGAS:null};
-var photoB64='',photoMime='image/png';
-var flightRows=[],_otList=[],_skipped=false,_frid=0;
 
 function setStep(n){[1,2,3,4].forEach(function(i){var e=document.getElementById('s'+i);e.className='step'+(i===n?' active':i<n?' done':'');});}
 function goPanel(n){[1,2,3].forEach(function(i){document.getElementById('panel'+i).style.display='none';});document.getElementById('panel'+n).style.display='block';setStep(n);}
@@ -900,63 +770,6 @@ function chkReady(){
       var method = (k1 && k2) ? 'Dual-API Failover (Gemini + OpenRouter)' : (k1 ? 'Gemini Only' : 'OpenRouter Only');
       showMsg('p1msg','All files loaded - ready to analyse! Using ' + method + '.','ok');
   }
-}
-
-async function callGeminiAPI(key, model, prompt, b64, mime){
-  var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key;
-  var payload = {
-    contents: [{
-      parts: [
-        { text: prompt },
-        { inline_data: { mime_type: mime, data: b64 } }
-      ]
-    }],
-    generationConfig: { response_mime_type: "application/json" }
-  };
-  var resp = await fetch(url,{ method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify(payload) });
-  var data = await resp.json().catch(function(){return {};});
-  
-  if(!resp.ok) throw new Error((data.error && data.error.message) || ("HTTP " + resp.status));
-  if(!data.candidates || !data.candidates[0].content) throw new Error("No content returned from Gemini");
-  
-  return {
-      text: data.candidates[0].content.parts[0].text,
-      provider: 'Google Gemini',
-      model: model
-  };
-}
-
-async function callOpenRouterAPI(key, model, prompt, b64, mime){
-  var payload = {
-      model: model,
-      messages: [{
-          role: "user",
-          content: [
-              { type: "text", text: prompt },
-              { type: "image_url", image_url: { url: "data:" + mime + ";base64," + b64 } }
-          ]
-      }]
-  };
-  var resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-          "Authorization": "Bearer " + key,
-          "Content-Type": "application/json",
-          "HTTP-Referer": window.location.href,
-          "X-Title": "PBSU T2 OT Claim"
-      },
-      body: JSON.stringify(payload)
-  });
-  var data = await resp.json().catch(function(){return {};});
-  
-  if(!resp.ok) throw new Error((data.error && data.error.message) || ("HTTP " + resp.status));
-  if(!data.choices || !data.choices[0].message) throw new Error("No content returned from OpenRouter");
-  
-  return {
-      text: data.choices[0].message.content,
-      provider: 'OpenRouter',
-      model: model
-  };
 }
 
 function loadMaster(inp){
@@ -980,11 +793,11 @@ function loadMaster(inp){
         var ar=XLSX.utils.sheet_to_json(wb.Sheets[aName],{header:1,defval:''});
         for(var i=0;i<ar.length;i++)for(var j=0;j<ar[i].length;j++){var cv=String(ar[i][j]).trim();if(cv.length>10){
             if(cv.startsWith('AIzaSy')){
-                if(!document.getElementById('apiKey').value)document.getElementById('apiKey').value=cv;
+                if(!document.getElementById('apiKey').value)document.getElementById('apiKey').value = cv;
             } else if(cv.startsWith('sk-or-v1-')){
-                if(!document.getElementById('apiKey2').value)document.getElementById('apiKey2').value=cv;
+                if(!document.getElementById('apiKey2').value)document.getElementById('apiKey2').value = cv;
             } else {
-                if(!document.getElementById('apiKey').value)document.getElementById('apiKey').value=cv;
+                if(!document.getElementById('apiKey').value)document.getElementById('apiKey').value = cv;
             }
           }}
       }
@@ -1048,7 +861,6 @@ function parseGrouping(ws){
     var row=rows[i];
     var joined=row.join('\t');
 
-    // 1. 固定 CC 人员在第 24 到 29 行 (索引 23 到 28)
     if(i >= 23 && i <= 28) {
       var ccIdC = String(row[2]||'').trim();
       var ccNmC = stripSuffix(String(row[3]||''));
@@ -1069,7 +881,6 @@ function parseGrouping(ws){
       continue;
     }
 
-    // 2. 团队识别逻辑 (寻找 TEAM XX)
     var rowHasTeam=false;
     for(var ci=0;ci<row.length;ci++){
       var tm=String(row[ci]||'').trim().match(/^TEAM\s*([A-Z0-9]+)/i);
@@ -1154,6 +965,64 @@ function parseRoster(ws, isFromGAS){
     result.push({id:id,name:name,team:team,status:statusRaw,isNHB:isNHB});
   }
   return result;
+}
+
+async function callGeminiAPI(key, model, prompt, b64, mime){
+  var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key;
+  var payload = {
+    contents: [{
+      parts: [
+        { text: prompt },
+        { inline_data: { mime_type: mime, data: b64 } }
+      ]
+    }],
+    generationConfig: { response_mime_type: "application/json" }
+  };
+  var resp = await fetch(url,{ method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify(payload) });
+  var data = await resp.json().catch(function(){return {};});
+  
+  if(!resp.ok) throw new Error((data.error && data.error.message) || ("HTTP " + resp.status));
+  if(!data.candidates || !data.candidates[0].content) throw new Error("No content returned from Gemini");
+  
+  return {
+      text: data.candidates[0].content.parts[0].text,
+      provider: 'Google Gemini',
+      model: model
+  };
+}
+
+async function callOpenRouterAPI(key, model, prompt, b64, mime){
+  var payload = {
+      model: model,
+      messages: [{
+          role: "user",
+          content: [
+              { type: "text", text: prompt },
+              { type: "image_url", image_url: { url: "data:" + mime + ";base64," + b64 } }
+          ]
+      }],
+      max_tokens: 3000
+  };
+  var resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+          "Authorization": "Bearer " + key,
+          "Content-Type": "application/json",
+          "HTTP-Referer": window.location.href,
+          "X-Title": "PBSU T2 OT Claim"
+      },
+      body: JSON.stringify(payload)
+  });
+  var data = await resp.json().catch(function(){return {};});
+  
+  if(!resp.ok) throw new Error((data.error && data.error.message) || ("HTTP " + resp.status));
+  if(!data.choices || !data.choices[0].message) throw new Error("No content returned from OpenRouter");
+  
+  return {
+      text: data.choices[0].message.content,
+      provider: 'OpenRouter',
+      model: model
+  };
 }
 
 function classifyCS(cs){
@@ -1265,20 +1134,22 @@ async function runAnalysis(){
   setLoading(true,'Analysing flight photo with AI...');
   showMsg('p1msg','','');
 
-  var prompt='You are transcribing a flight deployment table from an airport operations screenshot.\n\n';
-  if(expectedNames.length>0){
-    prompt+='CRITICAL ACCURACY: Match blurry text to these exact officer call signs:\n'+expectedNames.join(' | ')+'\n\n';
+  var prompt = 'You are transcribing a flight deployment table from an airport operations screenshot.\n\n';
+  if(expectedNames.length > 0){
+    prompt += 'CRITICAL ACCURACY: Match blurry text to these exact officer call signs:\n'+expectedNames.join(' | ') + '\n\n';
   } else {
-    prompt+='CRITICAL ACCURACY: Copy call signs EXACTLY as they appear in the image.\n\n';
+    prompt += 'CRITICAL ACCURACY: Copy call signs EXACTLY as they appear in the image.\n\n';
   }
-  prompt+='The table has ONE ROW PER FLIGHT. Columns: ETD | Flight number | Destination | Gate | Aircraft | Preboarding officer call signs | GS call signs | Additional codes\n\nFor EACH flight row output one JSON object:\n- "etd": 4-digit time string (e.g. "0850")\n- "flight": flight number (e.g. "SQ910", "AI2106", "UA2")\n- "gate": gate code (e.g. "F50", "E11")\n- "callsigns": array of ALL team call signs\n\nINCLUDE: Preboarding officers (e.g. "SHAREN (3) 2X", "T2 PM ESHIKAA (3) 1X", "N RAJ (3) 2X"), GS/CC (e.g. "CC 7AM (2)", "8-YAO 2GS"), RS/team codes (e.g. "T3 FUNG (3)", "3RS CQ", "A1(3)*")\n\nEXCLUDE: Individual officer names, destination codes, aircraft types, PAX, GOEM, VIPC, RETIMED, STANDBY GATE, EARLY RUN, COLECT PASS, ONGOING\n\nOne flight may span multiple lines - collect ALL call signs into ONE object.\nReturn ONLY a valid JSON array. No markdown.\n\nExample:\n[{"etd":"0850","flight":"SQ910","gate":"F50","callsigns":["HANISAH (3) 2X*","CC 7AM (2)","AA1 (3) CG"]}]';
+  prompt += 'The table has ONE ROW PER FLIGHT. Columns: ETD | Flight number | Destination | Gate | Aircraft | Preboarding officer call signs | GS call signs | Additional codes\n\n' +
+  'CRITICAL INSTRUCTION: You MUST read the table row by row from top to bottom. DO NOT SKIP ANY FLIGHTS. DO NOT TRUNCATE. Extract EVERY SINGLE FLIGHT visible in the image. You will fail if you stop early or summarize.\n\n' +
+  'For EACH flight row output one JSON object:\n- "etd": 4-digit time string (e.g. "0850")\n- "flight": flight number (e.g. "SQ910", "AI2106", "UA2")\n- "gate": gate code (e.g. "F50", "E11")\n- "callsigns": array of ALL team call signs\n\nINCLUDE: Preboarding officers (e.g. "SHAREN (3) 2X", "T2 PM ESHIKAA (3) 1X", "N RAJ (3) 2X"), GS/CC (e.g. "CC 7AM (2)", "8-YAO 2GS"), RS/team codes (e.g. "T3 FUNG (3)", "3RS CQ", "A1(3)*")\n\nEXCLUDE: Individual officer names, destination codes, aircraft types, PAX, GOEM, VIPC, RETIMED, STANDBY GATE, EARLY RUN, COLECT PASS, ONGOING\n\nOne flight may span multiple lines - collect ALL call signs into ONE object.\nReturn ONLY a valid JSON array. No markdown.\n\nExample:\n[{"etd":"0850","flight":"SQ910","gate":"F50","callsigns":["HANISAH (3) 2X*","CC 7AM (2)","AA1 (3) CG"]}]';
   
   var finalResult = null;
   var errLog = [];
 
   if(geminiKey) {
       try {
-          setLoading(true, 'Requesting Google Gemini...');
+          setLoading(true, 'Requesting Google Gemini (' + geminiModel + ')...');
           finalResult = await callGeminiAPI(geminiKey, geminiModel, prompt, photoB64, photoMime);
       } catch(e) {
           errLog.push("Gemini Error: " + e.message);
@@ -1398,12 +1269,6 @@ function addFlightRow(){
   tr.appendChild(tdE);tr.appendChild(tdF);tr.appendChild(tdG);tr.appendChild(tdCS);tr.appendChild(tdD);
   tbody.appendChild(tr);
   document.getElementById('flightCount').textContent=flightRows.length+' flights';
-}
-
-function filterFlights(q){
-  document.querySelectorAll('#flightBody tr').forEach(function(r){
-    var txt=r.getAttribute('data-search')||'';r.style.display=(!q||txt.includes(q.toLowerCase()))?'':'none';
-  });
 }
 
 function buildOT(){
